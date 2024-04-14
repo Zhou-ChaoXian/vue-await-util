@@ -1,0 +1,36 @@
+{
+  "name": "vue-await-hook",
+  "version": "1.0.0",
+  "description": "处理 promise 的 hook",
+  "main": "./dist/index.js",
+  "module": "./dist/es/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "start": "rollup -c"
+  },
+  "keywords": [
+    "vue",
+    "hook",
+    "await",
+    "promise"
+  ],
+  "author": {
+    "name": "Zhou-ChaoXian",
+    "email": "2542606900@qq.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Zhou-ChaoXian/vue-await-hook.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.12.1",
+    "vue": "^3.2.41"
+  },
+  "peerDependencies": {
+    "vue": "^3.2.41"
+  }
+}
