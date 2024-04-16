@@ -1,6 +1,16 @@
 "use strict";
 
-import {getCurrentInstance, customRef, markRaw, watch, watchEffect, defineComponent} from "vue";
+import {
+  getCurrentInstance,
+  getCurrentScope,
+  effectScope,
+  customRef,
+  ref,
+  markRaw,
+  watch,
+  watchEffect,
+  defineComponent,
+} from "vue";
 
 export {
   useAwait,
@@ -21,9 +31,10 @@ const _tracked = Symbol(), _data = Symbol(), _error = Symbol();
  * @typedef {"pending" | "resolve" | "reject"} Status
  * @typedef {{status: Status; data: T; error: *; first: boolean;}} ResolveData
  * @typedef {(first?: boolean) => void} StartFunction
- * @typedef {() => void} EndFunction
+ * @typedef {(first?: boolean) => void} EndFunction
  * @typedef {(error?: any) => void} ErrorFunction
  * @typedef {(cleanupFn: () => void) => void} OnCleanup
+ * @typedef {{update: () => void; unWatch: () => void; reWatch: () => void;}} WatchOptions
  */
 
 /**
@@ -72,8 +83,8 @@ function useAwait({resolve, init, delay = 300, onStart, onEnd, onError}) {
           setTimeout(() => {
             if (flag) {
               cancelMap.delete(resolve);
+              onEnd?.(first);
               first = false;
-              onEnd?.();
               setStatus(resolve);
               forceUpdate();
             }
@@ -114,15 +125,19 @@ function useAwait({resolve, init, delay = 300, onStart, onEnd, onError}) {
  * @param [onStart] {StartFunction}
  * @param [onEnd] {EndFunction}
  * @param [onError] {ErrorFunction}
- * @return {import("vue").Ref<Readonly<ResolveData<T>>>}
+ * @return {[import("vue").Ref<Readonly<ResolveData<T>>>, WatchOptions]}
  */
 function useAwaitWatch({deps = [], handle, init, delay = 300, onStart, onEnd, onError}) {
   const props = {resolve: null, init, delay, onStart, onEnd, onError};
   const resolveData = useAwait(props);
-  watch(deps, (value, oldValue, onCleanup) => {
-    resolveData.value = Promise.resolve(handle(value, oldValue, onCleanup));
-  }, {immediate: true});
-  return resolveData;
+  const [updateFlag, update] = useUpdate(resolveData);
+  const watchHandle = () => {
+    watch([updateFlag, ...deps], (value, oldValue, onCleanup) => {
+      resolveData.value = Promise.resolve(handle(value.slice(1), oldValue.slice(1), onCleanup));
+    }, {immediate: true});
+  };
+  const watchOptions = useWatchOptions(watchHandle, update);
+  return [resolveData, watchOptions];
 }
 
 /**
@@ -133,15 +148,52 @@ function useAwaitWatch({deps = [], handle, init, delay = 300, onStart, onEnd, on
  * @param [onStart] {StartFunction}
  * @param [onEnd] {EndFunction}
  * @param [onError] {ErrorFunction}
- * @return {import("vue").Ref<Readonly<ResolveData<T>>>}
+ * @return {[import("vue").Ref<Readonly<ResolveData<T>>>, WatchOptions]}
  */
 function useAwaitWatchEffect({handle, init, delay = 300, onStart, onEnd, onError}) {
   const props = {resolve: null, init, delay, onStart, onEnd, onError};
   const resolveData = useAwait(props);
-  watchEffect((onCleanup) => {
-    resolveData.value = Promise.resolve(handle(onCleanup));
-  });
-  return resolveData;
+  const [updateFlag, update] = useUpdate(resolveData);
+  const watchHandle = () => {
+    watchEffect((onCleanup) => {
+      const _ = updateFlag.value;
+      resolveData.value = Promise.resolve(handle(onCleanup));
+    });
+  };
+  const watchOptions = useWatchOptions(watchHandle, update);
+  return [resolveData, watchOptions];
+}
+
+function useUpdate(resolveData) {
+  const updateFlag = ref(true);
+  const update = () => {
+    if (!resolveData.value.first) {
+      updateFlag.value = !updateFlag.value;
+    }
+  };
+  return [updateFlag, update];
+}
+
+function useWatchOptions(watchHandle, update) {
+  const scope = getCurrentScope();
+  let watchScope = null;
+  const scopeFunction = () => {
+    watchScope = effectScope();
+    watchScope.run(watchHandle);
+  };
+  scope.run(scopeFunction);
+  return {
+    update,
+    unWatch: () => {
+      watchScope?.stop(false);
+      watchScope = null;
+    },
+    reWatch: () => {
+      if (watchScope === null) {
+        scope.run(scopeFunction);
+      }
+    }
+  };
 }
 
 /**
@@ -202,8 +254,8 @@ const AwaitWatch = defineComponent({
     onError: {type: Function}
   },
   setup: (props, {slots, expose}) => {
-    expose();
-    const resolveData = useAwaitWatch(props);
+    const [resolveData, watchOptions] = useAwaitWatch(props);
+    expose(watchOptions);
     return () => slots.default?.(resolveData.value);
   }
 });
@@ -220,8 +272,8 @@ const AwaitWatchEffect = defineComponent({
     onError: {type: Function}
   },
   setup: (props, {slots, expose}) => {
-    expose();
-    const resolveData = useAwaitWatchEffect(props);
+    const [resolveData, watchOptions] = useAwaitWatchEffect(props);
+    expose(watchOptions);
     return () => slots.default?.(resolveData.value);
   }
 });

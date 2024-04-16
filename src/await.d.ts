@@ -16,7 +16,7 @@ export interface AwaitProps<T> {
   init?: T;
   delay?: number;
   onStart?: (first?: boolean) => void;
-  onEnd?: () => void;
+  onEnd?: (first?: boolean) => void;
   onError?: (error?: any) => void;
 }
 
@@ -26,7 +26,7 @@ export interface AwaitWatchProps<T> {
   init?: T;
   delay?: number;
   onStart?: (first?: boolean) => void;
-  onEnd?: () => void;
+  onEnd?: (first?: boolean) => void;
   onError?: (error?: any) => void;
 }
 
@@ -35,17 +35,23 @@ export interface AwaitWatchEffectProps<T> {
   init?: T;
   delay?: number;
   onStart?: (first?: boolean) => void;
-  onEnd?: () => void;
+  onEnd?: (first?: boolean) => void;
   onError?: (error?: any) => void;
 }
 
 export type ReturnResolveData<T> = Ref<Readonly<ResolveData<T>>>;
 
+export interface WatchOptions {
+  update: () => void;
+  unWatch: () => void;
+  reWatch: () => void;
+}
+
 export declare function useAwait<T>(props: AwaitProps<T>): ReturnResolveData<T>;
 
-export declare function useAwaitWatch<T>(props: AwaitWatchProps<T>): ReturnResolveData<T>;
+export declare function useAwaitWatch<T>(props: AwaitWatchProps<T>): [ReturnResolveData<T>, WatchOptions];
 
-export declare function useAwaitWatchEffect<T>(props: AwaitWatchEffectProps<T>): ReturnResolveData<T>;
+export declare function useAwaitWatchEffect<T>(props: AwaitWatchEffectProps<T>): [ReturnResolveData<T>, WatchOptions];
 
 export declare function isPending(status: Status): boolean;
 
@@ -67,6 +73,7 @@ export declare const AwaitWatch: new <T>() => {
   $slots: {
     default: ResolveDataFn<T>;
   };
+  $expose: WatchOptions;
 };
 
 export declare const AwaitWatchEffect: new <T>() => {
@@ -74,4 +81,5 @@ export declare const AwaitWatchEffect: new <T>() => {
   $slots: {
     default: ResolveDataFn<T>;
   };
+  $expose: WatchOptions;
 };

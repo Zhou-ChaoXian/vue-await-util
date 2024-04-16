@@ -20,16 +20,25 @@
 
 ### useAwait
 
-**props** (问号表示可选属性)
+**props** (问号表示可选属性) -> 参数对象
 
-| `props` (属性) |        `type` (类型)        | `description` (描述) |
-|:-------------|:-------------------------:|:-------------------|
-| resolve      |    Promise &#124; any     | 需要处理的 `promise`    |
-| init?        |            any            | 初始化的值              |
-| delay?       |          number           | 延迟，防止闪烁            |
-| onStart?     | (first?: boolean) => void | promise 开始时执行      |
-| onEnd?       |        () => void         | promise 结束时执行      |
-| onError?     |   (error?: any) => void   | promise 报错时执行      |
+| `prop` (属性) |        `type` (类型)        | `description` (描述) |
+|:------------|:-------------------------:|:-------------------|
+| resolve     |    Promise &#124; any     | 需要处理的 `promise`    |
+| init?       |            any            | 初始化的值              |
+| delay?      |          number           | 延迟，防止闪烁            |
+| onStart?    | (first?: boolean) => void | promise 开始时执行      |
+| onEnd?      | (first?: boolean) => void | promise 结束时执行      |
+| onError?    |   (error?: any) => void   | promise 报错时执行      |
+
+**return** -> 返回值对象
+
+| `prop` (属性) |                `type` (类型)                 | `description` (描述) |
+|:------------|:------------------------------------------:|:-------------------|
+| first       |                    bool                    | 是否是第一次执行           |
+| status      | "pending" &#124; "resolve" &#124; "reject" | 当前状态               |
+| data        |                    any                     | 结果                 |
+| error       |                    any                     | 错误信息               |
 
 **示例**
 
@@ -93,17 +102,32 @@ const Foo = defineComponent(() => {
 
 ### useAwaitWatch
 
-**props** (问号表示可选属性)
+**props** (问号表示可选属性) -> 参数对象
 
-| `props` (属性) |        `type` (类型)        | `description` (描述)  |
-|:-------------|:-------------------------:|:--------------------|
-| deps?        |           Deps            | 依赖数组                |
-| handle       |          Handle           | 处理依赖数组，生成 `promise` |
-| init?        |            any            | 初始化的值               |
-| delay?       |          number           | 延迟，防止闪烁             |
-| onStart?     | (first?: boolean) => void | promise 开始时执行       |
-| onEnd?       |        () => void         | promise 结束时执行       |
-| onError?     |   (error?: any) => void   | promise 报错时执行       |
+| `prop` (属性) |        `type` (类型)        | `description` (描述)  |
+|:------------|:-------------------------:|:--------------------|
+| deps?       |           Deps            | 依赖数组                |
+| handle      |          Handle           | 处理依赖数组，生成 `promise` |
+| init?       |            any            | 初始化的值               |
+| delay?      |          number           | 延迟，防止闪烁             |
+| onStart?    | (first?: boolean) => void | promise 开始时执行       |
+| onEnd?      | (first?: boolean) => void | promise 结束时执行       |
+| onError?    |   (error?: any) => void   | promise 报错时执行       |
+
+**return** -> 返回值是个元组，是两个对象
+
+| `prop` (属性) |                `type` (类型)                 | `description` (描述) |
+|:------------|:------------------------------------------:|:-------------------|
+| first       |                    bool                    | 是否是第一次执行           |
+| status      | "pending" &#124; "resolve" &#124; "reject" | 当前状态               |
+| data        |                    any                     | 结果                 |
+| error       |                    any                     | 错误信息               |
+
+| `prop` (属性) | `type` (类型) | `description` (描述) |
+|:------------|:-----------:|:-------------------|
+| update      | () => void  | 强制刷新               |
+| unWatch     | () => void  | 取消监听依赖的变化          |
+| reWatch     | () => void  | 重新监听依赖的变化          |
 
 ```ts
 import type {WatchSource} from "vue";
@@ -125,7 +149,7 @@ import {useAwaitWatch, isPending} from "vue-await-hook";
 
 const count = ref(0);
 
-const resolveData = useAwaitWatch({
+const [resolveData] = useAwaitWatch({
   deps: [count],
   handle: async ([count]) => {
     return "hello" + count;
@@ -155,7 +179,7 @@ import {useAwaitWatch, isPending} from "vue-await-hook";
 
 const Foo = defineComponent(() => {
   const count = ref(0);
-  const resolveData = useAwaitWatch({
+  const [resolveData] = useAwaitWatch({
     deps: [count],
     handle: async ([count]) => {
       return "hello" + count;
@@ -181,14 +205,29 @@ const Foo = defineComponent(() => {
 
 **props** (问号表示可选属性)
 
-| `props` (属性) |        `type` (类型)        | `description` (描述) |
-|:-------------|:-------------------------:|:-------------------|
-| handle       |          Handle           | 生成 `promise`       |
-| init?        |            any            | 初始化的值              |
-| delay?       |          number           | 延迟，防止闪烁            |
-| onStart?     | (first?: boolean) => void | promise 开始时执行      |
-| onEnd?       |        () => void         | promise 结束时执行      |
-| onError?     |   (error?: any) => void   | promise 报错时执行      |
+| `prop` (属性) |        `type` (类型)        | `description` (描述) |
+|:------------|:-------------------------:|:-------------------|
+| handle      |          Handle           | 生成 `promise`       |
+| init?       |            any            | 初始化的值              |
+| delay?      |          number           | 延迟，防止闪烁            |
+| onStart?    | (first?: boolean) => void | promise 开始时执行      |
+| onEnd?      | (first?: boolean) => void | promise 结束时执行      |
+| onError?    |   (error?: any) => void   | promise 报错时执行      |
+
+**return** -> 返回值是个元组，是两个对象
+
+| `prop` (属性) |                `type` (类型)                 | `description` (描述) |
+|:------------|:------------------------------------------:|:-------------------|
+| first       |                    bool                    | 是否是第一次执行           |
+| status      | "pending" &#124; "resolve" &#124; "reject" | 当前状态               |
+| data        |                    any                     | 结果                 |
+| error       |                    any                     | 错误信息               |
+
+| `prop` (属性) | `type` (类型) | `description` (描述) |
+|:------------|:-----------:|:-------------------|
+| update      | () => void  | 强制刷新               |
+| unWatch     | () => void  | 取消监听依赖的变化          |
+| reWatch     | () => void  | 重新监听依赖的变化          |
 
 ```ts
 type OnCleanup = (cleanupFn: () => void) => void;
@@ -207,7 +246,7 @@ import {useAwaitWatchEffect, isPending} from "vue-await-hook";
 
 const count = ref(0);
 
-const resolveData = useAwaitWatchEffect({
+const [resolveData] = useAwaitWatchEffect({
   handle: async () => {
     return "hello" + count.value;
   }
@@ -236,7 +275,7 @@ import {useAwaitWatchEffect, isPending} from "vue-await-hook";
 
 const Foo = defineComponent(() => {
   const count = ref(0);
-  const resolveData = useAwaitWatchEffect({
+  const [resolveData] = useAwaitWatchEffect({
     handle: async () => {
       return "hello" + count.value;
     }
