@@ -61,6 +61,8 @@ export declare function isReject(status: Status): boolean;
 
 export type ResolveDataFn<T> = (resolveData: Readonly<ResolveData<T>>) => VNode | VNode[];
 
+export type ResolveWatchDataFn<T> = (resolveData: Readonly<ResolveData<T> & { watchOptions: WatchOptions; }>) => VNode | VNode[];
+
 export declare const Await: new <T>() => {
   $props: AwaitProps<T>;
   $slots: {
@@ -71,7 +73,7 @@ export declare const Await: new <T>() => {
 export declare const AwaitWatch: new <T>() => {
   $props: AwaitWatchProps<T>;
   $slots: {
-    default: ResolveDataFn<T>;
+    default: ResolveWatchDataFn<T>;
   };
   $expose: WatchOptions;
 };
@@ -79,7 +81,7 @@ export declare const AwaitWatch: new <T>() => {
 export declare const AwaitWatchEffect: new <T>() => {
   $props: AwaitWatchEffectProps<T>;
   $slots: {
-    default: ResolveDataFn<T>;
+    default: ResolveWatchDataFn<T>;
   };
   $expose: WatchOptions;
 };

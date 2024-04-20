@@ -245,7 +245,7 @@ const AwaitWatch = defineComponent({
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatch(props);
     expose(watchOptions);
-    return () => slots.default?.(resolveData.value);
+    return () => slots.default?.({...resolveData.value, watchOptions});
   }
 });
 
@@ -263,7 +263,7 @@ const AwaitWatchEffect = defineComponent({
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatchEffect(props);
     expose(watchOptions);
-    return () => slots.default?.(resolveData.value);
+    return () => slots.default?.({...resolveData.value, watchOptions});
   }
 });
 

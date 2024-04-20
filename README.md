@@ -323,7 +323,7 @@ const handleClick = () => {
   <div>
     <h1>count - {{count}}</h1>
     <button @click="handleClick">add</button>
-    <Await :resolve="promise" v-slot="{status, data}">
+    <Await :resolve="promise" #default="{status, data}">
       <h1 v-if="isPending(status)">loading...</h1>
       <h1 v-else>{{data}}</h1>
     </Await>
@@ -391,7 +391,7 @@ const handleClick = () => {
   <div>
     <h1>count - {{count}}</h1>
     <button @click="handleClick">add</button>
-    <AwaitWatch :deps :handle v-slot="{status, data}">
+    <AwaitWatch :deps :handle #default="{status, data}">
       <h1 v-if="isPending(status)">loading...</h1>
       <h1 v-else>{{data}}</h1>
     </AwaitWatch>
@@ -460,7 +460,7 @@ const handleClick = () => {
   <div>
     <h1>count - {{count}}</h1>
     <button @click="handleClick">add</button>
-    <AwaitWatchEffect :handle v-slot="{status, data}">
+    <AwaitWatchEffect :handle #default="{status, data}">
       <h1 v-if="isPending(status)">loading...</h1>
       <h1 v-else>{{data}}</h1>
     </AwaitWatchEffect>
