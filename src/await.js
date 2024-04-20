@@ -1,7 +1,6 @@
 "use strict";
 
 import {
-  getCurrentInstance,
   getCurrentScope,
   effectScope,
   customRef,
@@ -28,17 +27,6 @@ const _tracked = Symbol(), _data = Symbol(), _error = Symbol();
 
 /**
  * @template T
- * @typedef {"pending" | "resolve" | "reject"} Status
- * @typedef {{status: Status; data: T; error: *; first: boolean;}} ResolveData
- * @typedef {(first?: boolean) => void} StartFunction
- * @typedef {(first?: boolean) => void} EndFunction
- * @typedef {(error?: any) => void} ErrorFunction
- * @typedef {(cleanupFn: () => void) => void} OnCleanup
- * @typedef {{update: () => void; unWatch: () => void; reWatch: () => void;}} WatchOptions
- */
-
-/**
- * @template T
  * @param resolve {Promise<T>}
  * @param [init] {T}
  * @param [delay] {number}
@@ -48,13 +36,12 @@ const _tracked = Symbol(), _data = Symbol(), _error = Symbol();
  * @return {import("vue").Ref<Readonly<ResolveData<T>>>}
  */
 function useAwait({resolve, init, delay = 300, onStart, onEnd, onError}) {
-  const instance = getCurrentInstance();
-  const forceUpdate = () => instance.ctx.$forceUpdate();
   let status = "pending";
   let cacheResolve = null;
   let resolveValue = init;
   let first = true;
   const cancelMap = new Map();
+  let customTrigger = null;
   const setStatus = (resolve) => {
     if (Reflect.has(resolve, _data)) {
       status = "resolve";
@@ -65,55 +52,56 @@ function useAwait({resolve, init, delay = 300, onStart, onEnd, onError}) {
     }
   };
   const handle = (resolve) => {
-    if (resolve instanceof Promise && cacheResolve !== resolve) {
-      if (!Reflect.has(resolve, _tracked)) {
-        cancelMap.get(cacheResolve)?.();
-        cacheResolve = resolve;
-        let flag = true;
-        cancelMap.set(resolve, () => {
-          flag = false;
-          cancelMap.delete(resolve);
-        });
-        status = "pending";
-        onStart?.(first);
-        resolve.then(
-          v => Object.defineProperty(resolve, _data, {value: v}),
-          e => Object.defineProperty(resolve, _error, {value: e})
-        ).finally(() => {
-          setTimeout(() => {
-            if (flag) {
-              cancelMap.delete(resolve);
-              onEnd?.(first);
-              first = false;
-              setStatus(resolve);
-              forceUpdate();
-            }
-          }, delay);
-        });
-      } else {
-        cacheResolve = resolve;
-        setStatus(resolve);
-        forceUpdate();
-      }
-      return true;
+    if (!(resolve instanceof Promise) || cacheResolve === resolve)
+      return false;
+    if (!Reflect.has(resolve, _tracked)) {
+      cancelMap.get(cacheResolve)?.();
+      cacheResolve = resolve;
+      let flag = true;
+      cancelMap.set(resolve, () => {
+        flag = false;
+        cancelMap.delete(resolve);
+      });
+      status = "pending";
+      onStart?.(first);
+      resolve.then(
+        v => Object.defineProperty(resolve, _data, {value: v}),
+        e => Object.defineProperty(resolve, _error, {value: e})
+      ).finally(() => {
+        setTimeout(() => {
+          if (flag) {
+            cancelMap.delete(resolve);
+            onEnd?.(first);
+            first = false;
+            setStatus(resolve);
+            customTrigger();
+          }
+        }, delay);
+      });
+    } else {
+      cacheResolve = resolve;
+      setStatus(resolve);
     }
-    return false;
+    return true;
   };
   handle(resolve);
-  return customRef((track, trigger) => ({
-    get() {
-      track();
-      return markRaw({
-        status,
-        data: resolveValue,
-        error: Reflect.get(cacheResolve, _error),
-        first,
-      });
-    },
-    set(value) {
-      handle(value) && trigger();
-    }
-  }));
+  return customRef((track, trigger) => {
+    customTrigger = trigger;
+    return {
+      get() {
+        track();
+        return markRaw({
+          status,
+          data: resolveValue,
+          error: Reflect.get(cacheResolve, _error),
+          first,
+        });
+      },
+      set(value) {
+        handle(value) && trigger();
+      }
+    };
+  });
 }
 
 /**
@@ -156,7 +144,7 @@ function useAwaitWatchEffect({handle, init, delay = 300, onStart, onEnd, onError
   const [updateFlag, update] = useUpdate(resolveData);
   const watchHandle = () => {
     watchEffect((onCleanup) => {
-      const _ = updateFlag.value;
+      updateFlag.value;
       resolveData.value = Promise.resolve(handle(onCleanup));
     });
   };
@@ -277,3 +265,32 @@ const AwaitWatchEffect = defineComponent({
     return () => slots.default?.(resolveData.value);
   }
 });
+
+/**
+ * @typedef {"pending" | "resolve" | "reject"} Status
+ */
+
+/**
+ * @template T
+ * @typedef {{status: Status; data: T; error: any; first: boolean;}} ResolveData
+ */
+
+/**
+ * @typedef {(first?: boolean) => void} StartFunction
+ */
+
+/**
+ * @typedef {(first?: boolean) => void} EndFunction
+ */
+
+/**
+ * @typedef {(error?: any) => void} ErrorFunction
+ */
+
+/**
+ * @typedef {(cleanupFn: () => void) => void} OnCleanup
+ */
+
+/**
+ * @typedef {{update: () => void; unWatch: () => void; reWatch: () => void;}} WatchOptions
+ */

@@ -1,6 +1,6 @@
 {
   "name": "vue-await-hook",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "处理 promise 的 hook",
   "main": "./dist/index.js",
   "module": "./dist/es/index.mjs",
