@@ -55,6 +55,7 @@ function useAwait({resolve, init, delay = 300, onStart, onEnd, onError}) {
     if (!(resolve instanceof Promise) || cacheResolve === resolve)
       return false;
     if (!Reflect.has(resolve, _tracked)) {
+      Object.defineProperty(resolve, _tracked, {value: true});
       cancelMap.get(cacheResolve)?.();
       cacheResolve = resolve;
       let flag = true;
