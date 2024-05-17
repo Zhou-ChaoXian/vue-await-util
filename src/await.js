@@ -21,21 +21,23 @@ export {
   Await,
   AwaitWatch,
   AwaitWatchEffect,
+  Action,
 };
 
 const _tracked = Symbol(), _data = Symbol(), _error = Symbol();
 
 /**
  * @template T
- * @param resolve {Promise<T>}
+ * @param [resolve] {Promise<T>}
  * @param [init] {T}
  * @param [delay] {number}
+ * @param [jumpFirst] {boolean}
  * @param [onStart] {StartFunction}
  * @param [onEnd] {EndFunction}
  * @param [onError] {ErrorFunction}
  * @return {import("vue").Ref<Readonly<ResolveData<T>>>}
  */
-function useAwait({resolve, init, delay = 300, onStart, onEnd, onError}) {
+function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd, onError}) {
   let status = "pending";
   let cacheResolve = null;
   let resolveValue = init;
@@ -85,6 +87,13 @@ function useAwait({resolve, init, delay = 300, onStart, onEnd, onError}) {
     }
     return true;
   };
+  if (jumpFirst) {
+    first = false;
+    resolve = Object.defineProperties(Promise.resolve(init), {
+      [_tracked]: {value: true},
+      [_data]: {value: init},
+    });
+  }
   handle(resolve);
   return customRef((track, trigger) => {
     customTrigger = trigger;
@@ -111,17 +120,23 @@ function useAwait({resolve, init, delay = 300, onStart, onEnd, onError}) {
  * @param handle {(value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Promise<T> | T}
  * @param [init] {T}
  * @param [delay] {number}
+ * @param [jumpFirst] {boolean}
  * @param [onStart] {StartFunction}
  * @param [onEnd] {EndFunction}
  * @param [onError] {ErrorFunction}
  * @return {[import("vue").Ref<Readonly<ResolveData<T>>>, WatchOptions]}
  */
-function useAwaitWatch({deps = [], handle, init, delay = 300, onStart, onEnd, onError}) {
-  const props = {resolve: null, init, delay, onStart, onEnd, onError};
+function useAwaitWatch({deps = [], handle, init, delay = 300, jumpFirst = false, onStart, onEnd, onError}) {
+  const props = {resolve: null, init, delay, jumpFirst, onStart, onEnd, onError};
   const resolveData = useAwait(props);
   const [updateFlag, update] = useUpdate(resolveData);
+  const first = {value: true};
   const watchHandle = () => {
     watch([updateFlag, ...deps], (value, oldValue, onCleanup) => {
+      if (jumpFirst && first.value) {
+        first.value = false;
+        return;
+      }
       resolveData.value = Promise.resolve(handle(value.slice(1), oldValue.slice(1), onCleanup));
     }, {immediate: true});
   };
@@ -213,9 +228,10 @@ const Await = defineComponent({
   name: "Await",
   inheritAttrs: false,
   props: {
-    resolve: {required: true, type: Promise},
+    resolve: {type: Promise},
     init: {default: undefined},
     delay: {type: Number, default: 300},
+    jumpFirst: {type: Boolean, default: false},
     onStart: {type: Function},
     onEnd: {type: Function},
     onError: {type: Function}
@@ -238,6 +254,7 @@ const AwaitWatch = defineComponent({
     handle: {required: true, type: Function},
     init: {default: undefined},
     delay: {type: Number, default: 300},
+    jumpFirst: {type: Boolean, default: false},
     onStart: {type: Function},
     onEnd: {type: Function},
     onError: {type: Function}
@@ -264,6 +281,20 @@ const AwaitWatchEffect = defineComponent({
     const [resolveData, watchOptions] = useAwaitWatchEffect(props);
     expose(watchOptions);
     return () => slots.default?.({...resolveData.value, watchOptions});
+  }
+});
+
+const Action = defineComponent({
+  name: "Action",
+  inheritAttrs: false,
+  props: {
+    useAction: {required: true, type: Function},
+    options: {default: undefined},
+  },
+  setup: (props, {expose, slots}) => {
+    expose();
+    const state = props.useAction(props.options);
+    return () => slots.default?.(state);
   }
 });
 

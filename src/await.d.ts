@@ -12,9 +12,10 @@ export interface ResolveData<T> {
 }
 
 export interface AwaitProps<T> {
-  resolve: Promise<T>;
+  resolve?: Promise<T>;
   init?: T;
   delay?: number;
+  jumpFirst?: boolean;
   onStart?: (first?: boolean) => void;
   onEnd?: (first?: boolean) => void;
   onError?: (error?: any) => void;
@@ -25,6 +26,7 @@ export interface AwaitWatchProps<T> {
   handle: (value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Promise<T> | T;
   init?: T;
   delay?: number;
+  jumpFirst?: boolean;
   onStart?: (first?: boolean) => void;
   onEnd?: (first?: boolean) => void;
   onError?: (error?: any) => void;
@@ -84,4 +86,14 @@ export declare const AwaitWatchEffect: new <T>() => {
     default: ResolveWatchDataFn<T>;
   };
   $expose: WatchOptions;
+};
+
+export declare const Action: new <O, S>() => {
+  $props: {
+    useAction: (options?: O) => S;
+    options?: O;
+  };
+  $slots: {
+    default: (state: S) => VNode | VNode[];
+  };
 };
