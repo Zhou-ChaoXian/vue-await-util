@@ -88,7 +88,7 @@ export declare const AwaitWatchEffect: new <T>() => {
   $expose: WatchOptions;
 };
 
-export declare const Action: new <O, S>() => {
+export declare const Action: new <S, O = undefined>() => {
   $props: {
     useAction: (options?: O) => S;
     options?: O;

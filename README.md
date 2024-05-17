@@ -15,6 +15,7 @@
 5. [`AwaitWatch`组件](#awaitwatch) 👌👌👌
 6. [`AwaitWatchEffect`组件](#awaitwatcheffect) 👌👌👌👌👌
 7. [小程序使用组件](#小程序使用组件)
+8. [`Action`组件](#action)
 
 > **上面的 3 个组件在小程序上不能使用，hook可以使用，点击第 7 项查看小程序使用**
 
@@ -27,6 +28,7 @@
 | resolve     |    Promise &#124; any     | 需要处理的 `promise`    |
 | init?       |            any            | 初始化的值              |
 | delay?      |          number           | 延迟，防止闪烁            |
+| jumpFirst?  |          boolean          | 跳过首次请求             |
 | onStart?    | (first?: boolean) => void | promise 开始时执行      |
 | onEnd?      | (first?: boolean) => void | promise 结束时执行      |
 | onError?    |   (error?: any) => void   | promise 报错时执行      |
@@ -110,6 +112,7 @@ const Foo = defineComponent(() => {
 | handle      |          Handle           | 处理依赖数组，生成 `promise` |
 | init?       |            any            | 初始化的值               |
 | delay?      |          number           | 延迟，防止闪烁             |
+| jumpFirst?  |          boolean          | 跳过首次请求              |
 | onStart?    | (first?: boolean) => void | promise 开始时执行       |
 | onEnd?      | (first?: boolean) => void | promise 结束时执行       |
 | onError?    |   (error?: any) => void   | promise 报错时执行       |
@@ -510,6 +513,112 @@ const Foo = defineComponent(() => {
 import Await from "vue-await-hook/dist/components/Await.vue";
 import AwaitWatch from "vue-await-hook/dist/components/AwaitWatch.vue";
 import AwaitWatchEffect from "vue-await-hook/dist/components/AwaitWatchEffect.vue";
+```
+
+### Action
+
+> 封装状态和操作，仅供子元素使用
+
+- vue 模板
+
+```vue
+
+<script setup>
+import {ref} from "vue";
+import {Action} from "vue-await-hook";
+
+function useCountAction() {
+  const count = ref(0);
+
+  function add() {
+    count.value += 1;
+  }
+
+  return {
+    count,
+    add,
+  };
+}
+
+function useUserAction({count}) {
+  console.log(count.value);
+
+  const age = ref(18);
+
+  function add() {
+    age.value += 1;
+  }
+
+  return {
+    age,
+    add,
+  };
+}
+
+</script>
+
+<template>
+  <Action :useAction="useCountAction" #default="{count, add}">
+    <h1>{{count.value}}</h1>
+    <button @click="add">add</button>
+    <Action :options="{count}" :useAction="useUserAction" #default="{age, add}">
+      <h1>age {{age.value}}</h1>
+      <button @click="add">add age</button>
+    </Action>
+  </Action>
+</template>
+```
+
+```jsx
+import {ref} from "vue";
+import {Action} from "vue-await-hook";
+
+function useCountAction() {
+  const count = ref(0);
+
+  function add() {
+    count.value += 1;
+  }
+
+  return {
+    count,
+    add,
+  };
+}
+
+function useUserAction({count}) {
+  console.log(count.value);
+
+  const age = ref(18);
+
+  function add() {
+    age.value += 1;
+  }
+
+  return {
+    age,
+    add,
+  };
+}
+
+const App = defineComponent(() => () => (
+  <Action useAction={useCountAction}>
+    {({count, add}) => (
+      <>
+        <h1>{count.value}</h1>
+        <button onClick={add}>add</button>
+        <Action options={{count}} useAction={useUserAction}>
+          {({age, add}) => (
+            <>
+              <h1>age {age.value}</h1>
+              <button onClick={add}>add</button>
+            </>
+          )}
+        </Action>
+      </>
+    )}
+  </Action>
+));
 ```
 
 ## EOF
