@@ -1,17 +1,21 @@
-import type {Ref, VNode, WatchSource} from "vue";
+import type {ShallowRef, VNode, WatchSource, DefineSetupFnComponent, SlotsType} from "vue";
 
 export type Status = "pending" | "resolve" | "reject";
 
 export type OnCleanup = (cleanupFn: () => void) => void;
 
 export interface ResolveData<T> {
+  first: boolean;
   status: Status;
   data: T;
   error: any;
-  first: boolean;
 }
 
-export interface AwaitProps<T> {
+export type ResolveDataRef<T> = ShallowRef<ResolveData<T>>;
+
+export type UseResolve<T, U> = { useResolve?: (resolve: ResolveDataRef<T>) => U; };
+
+export interface UseAwaitProps<T> {
   resolve?: Promise<T>;
   init?: T;
   delay?: number;
@@ -21,9 +25,11 @@ export interface AwaitProps<T> {
   onError?: (error?: any) => void;
 }
 
-export interface AwaitWatchProps<T> {
+export type AwaitProps<T, U> = UseAwaitProps<T> & UseResolve<T, U>;
+
+export interface UseAwaitWatchProps<T> {
   deps?: WatchSource[];
-  handle: (value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Promise<T> | T;
+  handle: (value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Promise<T>;
   init?: T;
   delay?: number;
   jumpFirst?: boolean;
@@ -32,8 +38,10 @@ export interface AwaitWatchProps<T> {
   onError?: (error?: any) => void;
 }
 
-export interface AwaitWatchEffectProps<T> {
-  handle: (onCleanup?: OnCleanup) => Promise<T> | T;
+export type AwaitWatchProps<T, U> = UseAwaitWatchProps<T> & UseResolve<T, U>;
+
+export interface UseAwaitWatchEffectProps<T> {
+  handle: (onCleanup?: OnCleanup) => Promise<T>;
   init?: T;
   delay?: number;
   onStart?: (first?: boolean) => void;
@@ -41,7 +49,12 @@ export interface AwaitWatchEffectProps<T> {
   onError?: (error?: any) => void;
 }
 
-export type ReturnResolveData<T> = Ref<Readonly<ResolveData<T>>>;
+export type AwaitWatchEffectProps<T, U> = UseAwaitWatchEffectProps<T> & UseResolve<T, U>;
+
+export interface ActionProps<S, O> {
+  useAction: (options?: O) => S;
+  options?: O;
+}
 
 export interface WatchOptions {
   update: () => void;
@@ -49,11 +62,11 @@ export interface WatchOptions {
   reWatch: () => void;
 }
 
-export declare function useAwait<T>(props: AwaitProps<T>): ReturnResolveData<T>;
+export declare function useAwait<T>(props: UseAwaitProps<T>): ResolveDataRef<T>;
 
-export declare function useAwaitWatch<T>(props: AwaitWatchProps<T>): [ReturnResolveData<T>, WatchOptions];
+export declare function useAwaitWatch<T>(props: UseAwaitWatchProps<T>): [ResolveDataRef<T>, WatchOptions];
 
-export declare function useAwaitWatchEffect<T>(props: AwaitWatchEffectProps<T>): [ReturnResolveData<T>, WatchOptions];
+export declare function useAwaitWatchEffect<T>(props: UseAwaitWatchEffectProps<T>): [ResolveDataRef<T>, WatchOptions];
 
 export declare function isPending(status: Status): boolean;
 
@@ -61,39 +74,24 @@ export declare function isResolve(status: Status): boolean;
 
 export declare function isReject(status: Status): boolean;
 
-export type ResolveDataFn<T> = (resolveData: Readonly<ResolveData<T>>) => VNode | VNode[];
+export type AwaitSlot<T, U> = SlotsType<{ default: (resolve: ResolveData<T> & { use: U; }) => VNode | VNode[]; }>;
 
-export type ResolveWatchDataFn<T> = (resolveData: Readonly<ResolveData<T> & { watchOptions: WatchOptions; }>) => VNode | VNode[];
+export type AwaitWatchSlot<T, U> = SlotsType<{ default: (resolve: ResolveData<T> & { use: U; watchOptions: WatchOptions; }) => VNode | VNode[]; }>;
 
-export declare const Await: new <T>() => {
-  $props: AwaitProps<T>;
-  $slots: {
-    default: ResolveDataFn<T>;
-  };
-};
+export type ActionSlot<S> = SlotsType<{ default: (state: S) => VNode | VNode[]; }>;
 
-export declare const AwaitWatch: new <T>() => {
-  $props: AwaitWatchProps<T>;
-  $slots: {
-    default: ResolveWatchDataFn<T>;
-  };
-  $expose: WatchOptions;
-};
+export type ProvideSlot<P> = SlotsType<{ default: (props: P) => VNode | VNode[]; }>;
 
-export declare const AwaitWatchEffect: new <T>() => {
-  $props: AwaitWatchEffectProps<T>;
-  $slots: {
-    default: ResolveWatchDataFn<T>;
-  };
-  $expose: WatchOptions;
-};
+export declare const Await: new <T, U = any>() => InstanceType<DefineSetupFnComponent<AwaitProps<T, U>, {}, AwaitSlot<T, U>>>;
 
-export declare const Action: new <S, O = undefined>() => {
-  $props: {
-    useAction: (options?: O) => S;
-    options?: O;
-  };
-  $slots: {
-    default: (state: S) => VNode | VNode[];
-  };
-};
+export declare const AwaitWatch: new <T, U = any>() => InstanceType<DefineSetupFnComponent<AwaitWatchProps<T, U>, {}, AwaitWatchSlot<T, U>>>;
+
+export declare const AwaitWatchEffect: new <T, U = any>() => InstanceType<DefineSetupFnComponent<AwaitWatchEffectProps<T, U>, {}, AwaitWatchSlot<T, U>>>;
+
+export declare const Action: new <S, O = any>() => InstanceType<DefineSetupFnComponent<ActionProps<S, O>, {}, ActionSlot<S>>>;
+
+export declare const Host: new () => InstanceType<DefineSetupFnComponent>;
+
+export declare const Provide: new <P = Record<string, any>>() => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, ProvideSlot<P>>>;
+
+export declare const Slot: new () => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, { default?: () => VNode | VNode[]; }>>;

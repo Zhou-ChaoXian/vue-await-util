@@ -9,6 +9,8 @@ import {
   watch,
   watchEffect,
   defineComponent,
+  provide,
+  inject,
 } from "vue";
 
 export {
@@ -22,6 +24,9 @@ export {
   AwaitWatch,
   AwaitWatchEffect,
   Action,
+  Host,
+  Provide,
+  Slot,
 };
 
 const _tracked = Symbol(), _data = Symbol(), _error = Symbol();
@@ -117,7 +122,7 @@ function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd
 /**
  * @template T
  * @param [deps] {import("vue").WatchSource[]}
- * @param handle {(value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Promise<T> | T}
+ * @param handle {(value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Promise<T>}
  * @param [init] {T}
  * @param [delay] {number}
  * @param [jumpFirst] {boolean}
@@ -137,7 +142,7 @@ function useAwaitWatch({deps = [], handle, init, delay = 300, jumpFirst = false,
         first.value = false;
         return;
       }
-      resolveData.value = Promise.resolve(handle(value.slice(1), oldValue.slice(1), onCleanup));
+      resolveData.value = handle(value.slice(1), oldValue.slice(1), onCleanup);
     }, {immediate: true});
   };
   const watchOptions = useWatchOptions(watchHandle, update);
@@ -146,7 +151,7 @@ function useAwaitWatch({deps = [], handle, init, delay = 300, jumpFirst = false,
 
 /**
  * @template T
- * @param handle {(onCleanup?: OnCleanup) => Promise<T> | T}
+ * @param handle {(onCleanup?: OnCleanup) => Promise<T>}
  * @param [init] {T}
  * @param [delay] {number}
  * @param [onStart] {StartFunction}
@@ -161,7 +166,7 @@ function useAwaitWatchEffect({handle, init, delay = 300, onStart, onEnd, onError
   const watchHandle = () => {
     watchEffect((onCleanup) => {
       updateFlag.value;
-      resolveData.value = Promise.resolve(handle(onCleanup));
+      resolveData.value = handle(onCleanup);
     });
   };
   const watchOptions = useWatchOptions(watchHandle, update);
@@ -230,6 +235,7 @@ const Await = defineComponent({
   props: {
     resolve: {type: Promise},
     init: {default: undefined},
+    useResolve: {type: Function},
     delay: {type: Number, default: 300},
     jumpFirst: {type: Boolean, default: false},
     onStart: {type: Function},
@@ -239,10 +245,11 @@ const Await = defineComponent({
   setup: (props, {slots, expose}) => {
     expose();
     const resolveData = useAwait(props);
+    const use = props.useResolve?.(resolveData);
     watch(() => props.resolve, (value) => {
       resolveData.value = value;
     });
-    return () => slots.default?.(resolveData.value);
+    return () => slots.default?.({...resolveData.value, use});
   }
 });
 
@@ -250,9 +257,10 @@ const AwaitWatch = defineComponent({
   name: "AwaitWatch",
   inheritAttrs: false,
   props: {
-    deps: {required: true, type: Array},
+    deps: {type: Array},
     handle: {required: true, type: Function},
     init: {default: undefined},
+    useResolve: {type: Function},
     delay: {type: Number, default: 300},
     jumpFirst: {type: Boolean, default: false},
     onStart: {type: Function},
@@ -261,8 +269,9 @@ const AwaitWatch = defineComponent({
   },
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatch(props);
+    const use = props.useResolve?.(resolveData);
     expose(watchOptions);
-    return () => slots.default?.({...resolveData.value, watchOptions});
+    return () => slots.default?.({...resolveData.value, watchOptions, use});
   }
 });
 
@@ -272,6 +281,7 @@ const AwaitWatchEffect = defineComponent({
   props: {
     handle: {required: true, type: Function},
     init: {default: undefined},
+    useResolve: {type: Function},
     delay: {type: Number, default: 300},
     onStart: {type: Function},
     onEnd: {type: Function},
@@ -279,22 +289,9 @@ const AwaitWatchEffect = defineComponent({
   },
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatchEffect(props);
+    const use = props.useResolve?.(resolveData);
     expose(watchOptions);
-    return () => slots.default?.({...resolveData.value, watchOptions});
-  }
-});
-
-const Action = defineComponent({
-  name: "Action",
-  inheritAttrs: false,
-  props: {
-    useAction: {required: true, type: Function},
-    options: {default: undefined},
-  },
-  setup: (props, {expose, slots}) => {
-    expose();
-    const state = props.useAction(props.options);
-    return () => slots.default?.(state);
+    return () => slots.default?.({...resolveData.value, watchOptions, use});
   }
 });
 
@@ -326,3 +323,67 @@ const Action = defineComponent({
 /**
  * @typedef {{update: () => void; unWatch: () => void; reWatch: () => void;}} WatchOptions
  */
+
+const Action = defineComponent({
+  name: "Action",
+  inheritAttrs: false,
+  props: {
+    useAction: {required: true, type: Function},
+    options: {default: undefined},
+  },
+  setup: (props, {expose, slots}) => {
+    expose();
+    const state = props.useAction(props.options);
+    return () => slots.default?.(state);
+  }
+});
+
+const elementsSymbol = Symbol();
+
+const Host = defineComponent({
+  name: "Host",
+  inheritAttrs: false,
+  setup: (_, {expose, slots}) => {
+    expose();
+    const elements = {value: null};
+    provide(elementsSymbol, elements);
+    return () => {
+      const children = slots.default();
+      elements.value = children.slice(1).reduce((container, item) => {
+        if (item.type === Provide) {
+          const name = item.props?.name ?? "default";
+          container[name] = item.children?.default;
+        }
+        return container;
+      }, {});
+      return children[0];
+    };
+  }
+});
+
+const Provide = defineComponent({
+  name: "Provide",
+  inheritAttrs: false,
+  props: {name: {type: String, default: "default"}},
+  setup: (_, {expose, slots}) => {
+    expose();
+    return () => slots.default();
+  }
+});
+
+const Slot = defineComponent({
+  name: "Slot",
+  inheritAttrs: false,
+  props: {
+    name: {type: String, default: "default"},
+  },
+  setup: (props, {expose, attrs, slots}) => {
+    expose();
+    const elements = inject(elementsSymbol);
+    provide(elementsSymbol, undefined);
+    return () => {
+      const slot = elements?.value[props.name];
+      return slot ? slot(attrs) : slots.default?.();
+    };
+  }
+});

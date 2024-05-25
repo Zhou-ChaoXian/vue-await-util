@@ -16,6 +16,7 @@
 6. [`AwaitWatchEffect`组件](#awaitwatcheffect) 👌👌👌👌👌
 7. [小程序使用组件](#小程序使用组件)
 8. [`Action`组件](#action)
+9. [`Host Provide Slot`组件](#插槽)
 
 > **上面的 3 个组件在小程序上不能使用，hook可以使用，点击第 7 项查看小程序使用**
 
@@ -519,6 +520,8 @@ import AwaitWatchEffect from "vue-await-hook/dist/components/AwaitWatchEffect.vu
 
 > 封装状态和操作，仅供子元素使用
 
+**示例**
+
 - vue 模板
 
 ```vue
@@ -569,6 +572,8 @@ function useUserAction({count}) {
 </template>
 ```
 
+- jsx
+
 ```jsx
 import {ref} from "vue";
 import {Action} from "vue-await-hook";
@@ -618,6 +623,66 @@ const App = defineComponent(() => () => (
       </>
     )}
   </Action>
+));
+```
+
+### 插槽
+
+> 实现类似于 vue 插槽思想的组件
+
+**示例**
+
+- vue 模板
+
+```vue
+
+<script setup>
+import {Host, Provide, Slot} from "vue-await-hook";
+
+</script>
+
+<template>
+  <!-- Host 只会渲染第一个子元素，其他元素都是 Provide 组件 -->
+  <!-- 注意：注释也算元素，不能放在 Host 第一个位置 -->
+  <Host>
+    <div>
+      <h1>hello</h1>
+      <!-- name 默认是 default，和 Provide 对应 -->
+      <Slot></Slot>
+      <Slot name="item" value="你好"></Slot>
+    </div>
+    <Provide>
+      <h1>hi</h1>
+    </Provide>
+    <Provide name="item" #default="{value}">
+      <h1>{{ value }}</h1>
+    </Provide>
+  </Host>
+</template>
+```
+
+- jsx
+
+```jsx
+import {defineComponent} from "vue";
+import {Host, Provide, Slot} from "vue-await-hook";
+
+const App = defineComponent(() => () => (
+  <Host>
+    <div>
+      <h1>hello</h1>
+      <Slot></Slot>
+      <Slot name="item" value="你好"></Slot>
+    </div>
+    <Provide>
+      <h1>hi</h1>
+    </Provide>
+    <Provide name="item">
+      {({value}) => (
+        <h1>{value}</h1>
+      )}
+    </Provide>
+  </Host>
 ));
 ```
 
