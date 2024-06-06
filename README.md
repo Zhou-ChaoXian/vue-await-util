@@ -14,9 +14,9 @@
 4. [`Await`组件](#await) 👌👌👌
 5. [`AwaitWatch`组件](#awaitwatch) 👌👌👌
 6. [`AwaitWatchEffect`组件](#awaitwatcheffect) 👌👌👌👌👌
-7. [小程序使用组件](#小程序使用组件)
+7. [小程序使用以上三个组件](#小程序使用以上三个组件)
 8. [`Action`组件](#action)
-9. [`Host Provide Slot`组件](#插槽)
+9. [`Host Provide Slotted`组件](#插槽)
 
 > **上面的 3 个组件在小程序上不能使用，hook可以使用，点击第 7 项查看小程序使用**
 
@@ -504,7 +504,7 @@ const Foo = defineComponent(() => {
 });
 ```
 
-### 小程序使用组件
+### 小程序使用以上三个组件
 
 ```js
 // 无法使用
@@ -637,7 +637,7 @@ const App = defineComponent(() => () => (
 ```vue
 
 <script setup>
-import {Host, Provide, Slot} from "vue-await-hook";
+import {Host, Provide, Slotted} from "vue-await-hook";
 
 </script>
 
@@ -648,8 +648,8 @@ import {Host, Provide, Slot} from "vue-await-hook";
     <div>
       <h1>hello</h1>
       <!-- name 默认是 default，和 Provide 对应 -->
-      <Slot></Slot>
-      <Slot name="item" value="你好"></Slot>
+      <Slotted></Slotted>
+      <Slotted name="item" value="你好"></Slotted>
     </div>
     <Provide>
       <h1>hi</h1>
@@ -665,14 +665,14 @@ import {Host, Provide, Slot} from "vue-await-hook";
 
 ```jsx
 import {defineComponent} from "vue";
-import {Host, Provide, Slot} from "vue-await-hook";
+import {Host, Provide, Slotted} from "vue-await-hook";
 
 const App = defineComponent(() => () => (
   <Host>
     <div>
       <h1>hello</h1>
-      <Slot></Slot>
-      <Slot name="item" value="你好"></Slot>
+      <Slotted></Slotted>
+      <Slotted name="item" value="你好"></Slotted>
     </div>
     <Provide>
       <h1>hi</h1>
