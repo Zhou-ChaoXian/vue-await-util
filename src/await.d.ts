@@ -15,6 +15,8 @@ export type ResolveDataRef<T> = ShallowRef<ResolveData<T>>;
 
 export type UseResolve<T, U> = { useResolve?: (resolve: ResolveDataRef<T>) => U; };
 
+export type UseWatchResolve<T, U> = { useResolve?: (resolve: ResolveDataRef<T>, watchOptions: WatchOptions) => U; };
+
 export interface UseAwaitProps<T> {
   resolve?: Promise<T>;
   init?: T;
@@ -38,7 +40,7 @@ export interface UseAwaitWatchProps<T> {
   onError?: (error?: any) => void;
 }
 
-export type AwaitWatchProps<T, U> = UseAwaitWatchProps<T> & UseResolve<T, U>;
+export type AwaitWatchProps<T, U> = UseAwaitWatchProps<T> & UseWatchResolve<T, U>;
 
 export interface UseAwaitWatchEffectProps<T> {
   handle: (onCleanup?: OnCleanup) => Promise<T>;
@@ -49,7 +51,7 @@ export interface UseAwaitWatchEffectProps<T> {
   onError?: (error?: any) => void;
 }
 
-export type AwaitWatchEffectProps<T, U> = UseAwaitWatchEffectProps<T> & UseResolve<T, U>;
+export type AwaitWatchEffectProps<T, U> = UseAwaitWatchEffectProps<T> & UseWatchResolve<T, U>;
 
 export interface ActionProps<S, O> {
   useAction: (options?: O) => S;
@@ -82,16 +84,16 @@ export type ActionSlot<S> = SlotsType<{ default: (state: S) => VNode | VNode[]; 
 
 export type ProvideSlot<P> = SlotsType<{ default: (props: P) => VNode | VNode[]; }>;
 
-export declare const Await: new <T, U = any>() => InstanceType<DefineSetupFnComponent<AwaitProps<T, U>, {}, AwaitSlot<T, U>>>;
+export declare const Await: new <T = any, U = any>() => InstanceType<DefineSetupFnComponent<AwaitProps<T, U>, {}, AwaitSlot<T, U>>>;
 
-export declare const AwaitWatch: new <T, U = any>() => InstanceType<DefineSetupFnComponent<AwaitWatchProps<T, U>, {}, AwaitWatchSlot<T, U>>>;
+export declare const AwaitWatch: new <T = any, U = any>() => InstanceType<DefineSetupFnComponent<AwaitWatchProps<T, U>, {}, AwaitWatchSlot<T, U>>>;
 
-export declare const AwaitWatchEffect: new <T, U = any>() => InstanceType<DefineSetupFnComponent<AwaitWatchEffectProps<T, U>, {}, AwaitWatchSlot<T, U>>>;
+export declare const AwaitWatchEffect: new <T = any, U = any>() => InstanceType<DefineSetupFnComponent<AwaitWatchEffectProps<T, U>, {}, AwaitWatchSlot<T, U>>>;
 
-export declare const Action: new <S, O = any>() => InstanceType<DefineSetupFnComponent<ActionProps<S, O>, {}, ActionSlot<S>>>;
+export declare const Action: new <S = any, O = any>() => InstanceType<DefineSetupFnComponent<ActionProps<S, O>, {}, ActionSlot<S>>>;
 
 export declare const Host: new () => InstanceType<DefineSetupFnComponent>;
 
 export declare const Provide: new <P = Record<string, any>>() => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, ProvideSlot<P>>>;
 
-export declare const Slot: new () => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, { default?: () => VNode | VNode[]; }>>;
+export declare const Slotted: new () => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, { default?: () => VNode | VNode[]; }>>;

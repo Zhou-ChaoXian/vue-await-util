@@ -26,7 +26,7 @@ export {
   Action,
   Host,
   Provide,
-  Slot,
+  Slotted,
 };
 
 const _tracked = Symbol(), _data = Symbol(), _error = Symbol();
@@ -269,7 +269,7 @@ const AwaitWatch = defineComponent({
   },
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatch(props);
-    const use = props.useResolve?.(resolveData);
+    const use = props.useResolve?.(resolveData, watchOptions);
     expose(watchOptions);
     return () => slots.default?.({...resolveData.value, watchOptions, use});
   }
@@ -289,7 +289,7 @@ const AwaitWatchEffect = defineComponent({
   },
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatchEffect(props);
-    const use = props.useResolve?.(resolveData);
+    const use = props.useResolve?.(resolveData, watchOptions);
     expose(watchOptions);
     return () => slots.default?.({...resolveData.value, watchOptions, use});
   }
@@ -371,8 +371,8 @@ const Provide = defineComponent({
   }
 });
 
-const Slot = defineComponent({
-  name: "Slot",
+const Slotted = defineComponent({
+  name: "Slotted",
   inheritAttrs: false,
   props: {
     name: {type: String, default: "default"},
