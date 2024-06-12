@@ -82,7 +82,7 @@ export type AwaitWatchSlot<T, U> = SlotsType<{ default: (resolve: ResolveData<T>
 
 export type ActionSlot<S> = SlotsType<{ default: (state: S) => VNode | VNode[]; }>;
 
-export type ProvideSlot<P> = SlotsType<{ default: (props: P) => VNode | VNode[]; }>;
+export type ProvisionSlot<P> = SlotsType<{ default: (props: P) => VNode | VNode[]; }>;
 
 export declare const Await: new <T = any, U = any>() => InstanceType<DefineSetupFnComponent<AwaitProps<T, U>, {}, AwaitSlot<T, U>>>;
 
@@ -94,6 +94,6 @@ export declare const Action: new <S = any, O = any>() => InstanceType<DefineSetu
 
 export declare const Host: new () => InstanceType<DefineSetupFnComponent>;
 
-export declare const Provide: new <P = Record<string, any>>() => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, ProvideSlot<P>>>;
+export declare const Provision: new <P = Record<string, any>>() => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, ProvisionSlot<P>>>;
 
-export declare const Slotted: new () => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, { default?: () => VNode | VNode[]; }>>;
+export declare const Slotted: new () => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, SlotsType<{ default?: () => VNode | VNode[]; }>>>;

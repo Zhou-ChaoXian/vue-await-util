@@ -25,7 +25,7 @@ export {
   AwaitWatchEffect,
   Action,
   Host,
-  Provide,
+  Provision,
   Slotted,
 };
 
@@ -135,11 +135,11 @@ function useAwaitWatch({deps = [], handle, init, delay = 300, jumpFirst = false,
   const props = {resolve: null, init, delay, jumpFirst, onStart, onEnd, onError};
   const resolveData = useAwait(props);
   const [updateFlag, update] = useUpdate(resolveData);
-  const first = {value: true};
+  let jumpFlag = true;
   const watchHandle = () => {
     watch([updateFlag, ...deps], (value, oldValue, onCleanup) => {
-      if (jumpFirst && first.value) {
-        first.value = false;
+      if (jumpFirst && jumpFlag) {
+        jumpFlag = false;
         return;
       }
       resolveData.value = handle(value.slice(1), oldValue.slice(1), onCleanup);
@@ -338,21 +338,21 @@ const Action = defineComponent({
   }
 });
 
-const elementsSymbol = Symbol();
+const provisionSlotsSymbol = Symbol();
 
 const Host = defineComponent({
   name: "Host",
   inheritAttrs: false,
   setup: (_, {expose, slots}) => {
     expose();
-    const elements = {value: null};
-    provide(elementsSymbol, elements);
+    const provisionSlots = {value: null};
+    provide(provisionSlotsSymbol, provisionSlots);
     return () => {
       const children = slots.default();
-      elements.value = children.slice(1).reduce((container, item) => {
-        if (item.type === Provide) {
+      provisionSlots.value = children.slice(1).reduce((container, item) => {
+        if (item.type === Provision) {
           const name = item.props?.name ?? "default";
-          container[name] = item.children?.default;
+          container[name] ??= item.children?.default;
         }
         return container;
       }, {});
@@ -361,8 +361,8 @@ const Host = defineComponent({
   }
 });
 
-const Provide = defineComponent({
-  name: "Provide",
+const Provision = defineComponent({
+  name: "Provision",
   inheritAttrs: false,
   props: {name: {type: String, default: "default"}},
   setup: (_, {expose, slots}) => {
@@ -379,10 +379,10 @@ const Slotted = defineComponent({
   },
   setup: (props, {expose, attrs, slots}) => {
     expose();
-    const elements = inject(elementsSymbol);
-    provide(elementsSymbol, undefined);
+    const provisionSlots = inject(provisionSlotsSymbol);
+    provide(provisionSlotsSymbol, null);
     return () => {
-      const slot = elements?.value[props.name];
+      const slot = provisionSlots?.value[props.name];
       return slot ? slot(attrs) : slots.default?.();
     };
   }
