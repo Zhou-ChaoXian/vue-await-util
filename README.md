@@ -1,32 +1,28 @@
 # vue-await-hook
 
-> 用于处理组件中的 `promise`
+> 处理组件中的 `promise`
 
-```text
-👌          极度不推荐使用 (麻烦且不好用)
-👌👌👌      不太推荐使用 (好用但不方便)
-👌👌👌👌👌   推荐使用 (👍👍👍👍👍赞)
-```
+> ***推荐使用组件，因为组件有良好的边界，更利于开发维护***
 
-1. [`useAwait` hook](#useawait) 👌
-2. [`useAwaitWatch` hook](#useawaitwatch) 👌
-3. [`useAwaitWatchEffect`hook](#useawaitwatcheffect) 👌
-4. [`Await`组件](#await) 👌👌👌
-5. [`AwaitWatch`组件](#awaitwatch) 👌👌👌
-6. [`AwaitWatchEffect`组件](#awaitwatcheffect) 👌👌👌👌👌
-7. [小程序使用以上三个组件](#小程序使用以上三个组件)
-8. [`Action`组件](#action)
-9. [`Host Provide Slotted`组件](#插槽)
+### 目录
 
-> **上面的 3 个组件在小程序上不能使用，hook可以使用，点击第 7 项查看小程序使用**
+- [`useAwait`](#useawait)
+- [`useAwaitWatch`](#useawaitwatch)
+- [`useAwaitWatchEffect`](#useawaitwatcheffect)
+- [`Await`](#await)
+- [`AwaitWatch`](#awaitwatch)
+- [`AwaitWatchEffect`](#awaitwatcheffect)
+- [`Action`](#action)
+- [`Host Provision Slotted`](#插槽)
+- [`uniapp 小程序`](#小程序)
 
 ### useAwait
 
-**props** (问号表示可选属性) -> 参数对象
+**props** (问号表示可选属性)
 
 | `prop` (属性) |        `type` (类型)        | `description` (描述) |
 |:------------|:-------------------------:|:-------------------|
-| resolve     |    Promise &#124; any     | 需要处理的 `promise`    |
+| resolve     | Promise &#124; undefined  | 需要处理的 `promise`    |
 | init?       |            any            | 初始化的值              |
 | delay?      |          number           | 延迟，防止闪烁            |
 | jumpFirst?  |          boolean          | 跳过首次请求             |
@@ -34,7 +30,7 @@
 | onEnd?      | (first?: boolean) => void | promise 结束时执行      |
 | onError?    |   (error?: any) => void   | promise 报错时执行      |
 
-**return** -> 返回值对象
+**return** (返回值是一个 `ref`)
 
 | `prop` (属性) |                `type` (类型)                 | `description` (描述) |
 |:------------|:------------------------------------------:|:-------------------|
@@ -105,7 +101,7 @@ const Foo = defineComponent(() => {
 
 ### useAwaitWatch
 
-**props** (问号表示可选属性) -> 参数对象
+**props** (问号表示可选属性)
 
 | `prop` (属性) |        `type` (类型)        | `description` (描述)  |
 |:------------|:-------------------------:|:--------------------|
@@ -118,7 +114,7 @@ const Foo = defineComponent(() => {
 | onEnd?      | (first?: boolean) => void | promise 结束时执行       |
 | onError?    |   (error?: any) => void   | promise 报错时执行       |
 
-**return** -> 返回值是个元组，是两个对象
+**return** (返回值是个元组，是两个对象)
 
 | `prop` (属性) |                `type` (类型)                 | `description` (描述) |
 |:------------|:------------------------------------------:|:-------------------|
@@ -218,7 +214,7 @@ const Foo = defineComponent(() => {
 | onEnd?      | (first?: boolean) => void | promise 结束时执行      |
 | onError?    |   (error?: any) => void   | promise 报错时执行      |
 
-**return** -> 返回值是个元组，是两个对象
+**return** (返回值是个元组，是两个对象)
 
 | `prop` (属性) |                `type` (类型)                 | `description` (描述) |
 |:------------|:------------------------------------------:|:-------------------|
@@ -504,18 +500,6 @@ const Foo = defineComponent(() => {
 });
 ```
 
-### 小程序使用以上三个组件
-
-```js
-// 无法使用
-// import {Await, AwaitWatch, AwaitWatchEffect} from "vue-await-hook";
-
-// 这样使用
-import Await from "vue-await-hook/dist/components/Await.vue";
-import AwaitWatch from "vue-await-hook/dist/components/AwaitWatch.vue";
-import AwaitWatchEffect from "vue-await-hook/dist/components/AwaitWatchEffect.vue";
-```
-
 ### Action
 
 > 封装状态和操作，仅供子元素使用
@@ -628,7 +612,7 @@ const App = defineComponent(() => () => (
 
 ### 插槽
 
-> 实现类似于 vue 插槽思想的组件
+> 实现插槽思想的组件
 
 **示例**
 
@@ -637,26 +621,26 @@ const App = defineComponent(() => () => (
 ```vue
 
 <script setup>
-import {Host, Provide, Slotted} from "vue-await-hook";
+import {Host, Provision, Slotted} from "vue-await-hook";
 
 </script>
 
 <template>
-  <!-- Host 只会渲染第一个子元素，其他元素都是 Provide 组件 -->
+  <!-- Host 只会渲染第一个子元素，其他元素都是 Provision 组件 -->
   <!-- 注意：注释也算元素，不能放在 Host 第一个位置 -->
   <Host>
     <div>
       <h1>hello</h1>
-      <!-- name 默认是 default，和 Provide 对应 -->
+      <!-- name 默认是 default，和 Provision 对应 -->
       <Slotted></Slotted>
       <Slotted name="item" value="你好"></Slotted>
     </div>
-    <Provide>
+    <Provision>
       <h1>hi</h1>
-    </Provide>
-    <Provide name="item" #default="{value}">
+    </Provision>
+    <Provision name="item" #default="{value}">
       <h1>{{ value }}</h1>
-    </Provide>
+    </Provision>
   </Host>
 </template>
 ```
@@ -665,7 +649,7 @@ import {Host, Provide, Slotted} from "vue-await-hook";
 
 ```jsx
 import {defineComponent} from "vue";
-import {Host, Provide, Slotted} from "vue-await-hook";
+import {Host, Provision, Slotted} from "vue-await-hook";
 
 const App = defineComponent(() => () => (
   <Host>
@@ -674,16 +658,35 @@ const App = defineComponent(() => () => (
       <Slotted></Slotted>
       <Slotted name="item" value="你好"></Slotted>
     </div>
-    <Provide>
+    <Provision>
       <h1>hi</h1>
-    </Provide>
-    <Provide name="item">
+    </Provision>
+    <Provision name="item">
       {({value}) => (
         <h1>{value}</h1>
       )}
-    </Provide>
+    </Provision>
   </Host>
 ));
+```
+
+### 小程序
+
+> ***直接导入的组件，小程序不能使用***
+
+```vue
+
+<script setup>
+import {useAwait, useAwaitWatch, useAwaitWatchEffect} from "vue-await-hook";
+import Await from "vue-await-hook/dist/components/Await.vue";
+import AwaitWatch from "vue-await-hook/dist/components/AwaitWatch.vue";
+import AwaitWatchEffect from "vue-await-hook/dist/components/AwaitWatchEffect.vue";
+
+</script>
+
+<template>
+  <view></view>
+</template>
 ```
 
 ## EOF
