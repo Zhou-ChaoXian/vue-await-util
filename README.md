@@ -1,4 +1,4 @@
-# vue-await-hook
+# vue-await-util
 
 > 处理组件中的 `promise`
 
@@ -10,11 +10,11 @@
 - [`useAwaitWatch`](#useawaitwatch)
 - [`useAwaitWatchEffect`](#useawaitwatcheffect)
 - [`Await`](#await)
-- [`AwaitWatch`](#awaitwatch)
+- [`AwaitWatch`](#awaitwatch) 🌷🌸🌺 ( ***使用最多*** )
 - [`AwaitWatchEffect`](#awaitwatcheffect)
 - [`Action`](#action)
 - [`Host Provision Slotted`](#插槽)
-- [`uniapp 小程序`](#小程序)
+- [`uniapp 小程序使用`](#小程序)
 
 ### useAwait
 
@@ -41,20 +41,18 @@
 
 **示例**
 
-- vue 模板
-
 ```vue
-
 <script setup>
 import {ref} from "vue";
-import {useAwait, isPending} from "vue-await-hook";
+import {useAwait, isPending} from "vue-await-util";
 
 const count = ref(0);
 
 const resolveData = useAwait({
   resolve: Promise.resolve("hello" + count.value)
 });
-const handleClick = () => {
+
+function add() {
   count.value += 1;
   resolveData.value = Promise.resolve("hello" + count.value);
 }
@@ -63,40 +61,12 @@ const handleClick = () => {
 
 <template>
   <div>
-    <h1>count - {{count}}</h1>
-    <button @click="handleClick">add</button>
+    <h1>count - {{ count }}</h1>
+    <button @click="add">add</button>
     <h1 v-if="isPending(resolveData.status)">loading...</h1>
-    <h1 v-else>{{resolveData.data}}</h1>
+    <h1 v-else>{{ resolveData.data }}</h1>
   </div>
 </template>
-```
-
-- jsx
-
-```jsx
-import {ref, defineComponent} from "vue";
-import {useAwait, isPending} from "vue-await-hook";
-
-const Foo = defineComponent(() => {
-  const count = ref(0);
-  const resolveData = useAwait({
-    resolve: Promise.resolve("hello")
-  });
-  const handleClick = () => {
-    count.value += 1;
-    resolveData.value = Promise.resolve("hello" + count.value);
-  };
-  return () => (
-    <div>
-      <h1>count - {count.value}</h1>
-      <button onClick={handleClick}>add</button>
-      {isPending(resolveData.value.status) ?
-        <h1>loading...</h1> :
-        <h1>{resolveData.value.data}</h1>
-      }
-    </div>
-  );
-});
 ```
 
 ### useAwaitWatch
@@ -114,7 +84,7 @@ const Foo = defineComponent(() => {
 | onEnd?      | (first?: boolean) => void | promise 结束时执行       |
 | onError?    |   (error?: any) => void   | promise 报错时执行       |
 
-**return** (返回值是个元组，是两个对象)
+**return** (返回值 [resolveData, watchOptions] )
 
 | `prop` (属性) |                `type` (类型)                 | `description` (描述) |
 |:------------|:------------------------------------------:|:-------------------|
@@ -134,71 +104,39 @@ import type {WatchSource} from "vue";
 
 type Deps = WatchSource[];
 type OnCleanup = (cleanupFn: () => void) => void;
-type Handle<T> = (value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Promise<T> | T;
+type Handle<T> = (value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Promise<T>;
 ```
 
 **示例**
 
-- vue 模板
-
 ```vue
-
 <script setup>
 import {ref} from "vue";
-import {useAwaitWatch, isPending} from "vue-await-hook";
+import {useAwaitWatch, isPending} from "vue-await-util";
 
 const count = ref(0);
 
-const [resolveData] = useAwaitWatch({
-  deps: [count],
-  handle: async ([count]) => {
-    return "hello" + count;
-  }
-});
-const handleClick = () => {
+function add() {
   count.value += 1;
 }
+
+const [resolveData] = useAwaitWatch({
+  deps: [count],
+  handle: async () => {
+    return "hello" + count.value;
+  }
+});
 
 </script>
 
 <template>
   <div>
-    <h1>count - {{count}}</h1>
-    <button @click="handleClick">add</button>
+    <h1>count - {{ count }}</h1>
+    <button @click="add">add</button>
     <h1 v-if="isPending(resolveData.status)">loading...</h1>
-    <h1 v-else>{{resolveData.data}}</h1>
+    <h1 v-else>{{ resolveData.data }}</h1>
   </div>
 </template>
-```
-
-- jsx
-
-```jsx
-import {ref, defineComponent} from "vue";
-import {useAwaitWatch, isPending} from "vue-await-hook";
-
-const Foo = defineComponent(() => {
-  const count = ref(0);
-  const [resolveData] = useAwaitWatch({
-    deps: [count],
-    handle: async ([count]) => {
-      return "hello" + count;
-    }
-  });
-  const handleClick = () => {
-    count.value += 1;
-  };
-  return () => (
-    <div>
-      <h1>count - {count.value}</h1>
-      <button onClick={handleClick}>add</button>
-      {isPending(resolveData.value.status) ?
-        <h1>loading...</h1> :
-        <h1>{resolveData.value.data}</h1>
-      }
-    </div>
-  );
-});
 ```
 
 ### useAwaitWatchEffect
@@ -214,7 +152,7 @@ const Foo = defineComponent(() => {
 | onEnd?      | (first?: boolean) => void | promise 结束时执行      |
 | onError?    |   (error?: any) => void   | promise 报错时执行      |
 
-**return** (返回值是个元组，是两个对象)
+**return** (返回值 [resolveData, watchOptions] )
 
 | `prop` (属性) |                `type` (类型)                 | `description` (描述) |
 |:------------|:------------------------------------------:|:-------------------|
@@ -231,69 +169,38 @@ const Foo = defineComponent(() => {
 
 ```ts
 type OnCleanup = (cleanupFn: () => void) => void;
-type Handle<T> = (onCleanup?: OnCleanup) => Promise<T> | T;
+type Handle<T> = (onCleanup?: OnCleanup) => Promise<T>;
 ```
 
 **示例**
 
-- vue 模板
-
 ```vue
-
 <script setup>
 import {ref} from "vue";
-import {useAwaitWatchEffect, isPending} from "vue-await-hook";
+import {useAwaitWatchEffect, isPending} from "vue-await-util";
 
 const count = ref(0);
+
+function add() {
+  count.value += 1;
+}
 
 const [resolveData] = useAwaitWatchEffect({
   handle: async () => {
     return "hello" + count.value;
   }
 });
-const handleClick = () => {
-  count.value += 1;
-}
 
 </script>
 
 <template>
   <div>
-    <h1>count - {{count}}</h1>
-    <button @click="handleClick">add</button>
+    <h1>count - {{ count }}</h1>
+    <button @click="add">add</button>
     <h1 v-if="isPending(resolveData.status)">loading...</h1>
-    <h1 v-else>{{resolveData.data}}</h1>
+    <h1 v-else>{{ resolveData.data }}</h1>
   </div>
 </template>
-```
-
-- jsx
-
-```jsx
-import {ref, defineComponent} from "vue";
-import {useAwaitWatchEffect, isPending} from "vue-await-hook";
-
-const Foo = defineComponent(() => {
-  const count = ref(0);
-  const [resolveData] = useAwaitWatchEffect({
-    handle: async () => {
-      return "hello" + count.value;
-    }
-  });
-  const handleClick = () => {
-    count.value += 1;
-  };
-  return () => (
-    <div>
-      <h1>count - {count.value}</h1>
-      <button onClick={handleClick}>add</button>
-      {isPending(resolveData.value.status) ?
-        <h1>loading...</h1> :
-        <h1>{resolveData.value.data}</h1>
-      }
-    </div>
-  );
-});
 ```
 
 ### Await
@@ -302,64 +209,31 @@ const Foo = defineComponent(() => {
 
 **示例**
 
-- vue 模板
-
 ```vue
-
 <script setup>
 import {ref} from "vue";
-import {Await, isPending} from "vue-await-hook";
+import {Await, isPending} from "vue-await-util";
 
 const count = ref(0);
 const promise = ref(Promise.resolve("hello" + count.value));
-const handleClick = () => {
+
+function add() {
   count.value += 1;
   promise.value = Promise.resolve("hello" + count.value);
-};
+}
 
 </script>
 
 <template>
   <div>
-    <h1>count - {{count}}</h1>
-    <button @click="handleClick">add</button>
+    <h1>count - {{ count }}</h1>
+    <button @click="add">add</button>
     <Await :resolve="promise" #default="{status, data}">
       <h1 v-if="isPending(status)">loading...</h1>
-      <h1 v-else>{{data}}</h1>
+      <h1 v-else>{{ data }}</h1>
     </Await>
   </div>
 </template>
-```
-
-- jsx
-
-```jsx
-import {ref, defineComponent} from "vue";
-import {Await, isPending} from "vue-await-hook";
-
-const Foo = defineComponent(() => {
-  const count = ref(0);
-  const promise = ref(Promise.resolve("hello" + count.value));
-  const handleClick = () => {
-    count.value += 1;
-    promise.value = Promise.resolve("hello" + count.value);
-  };
-  return () => (
-    <div>
-      <h1>count - {count.value}</h1>
-      <button onClick={handleClick}>add</button>
-      <Await resolve={promise.value}>
-        {({status, data}) => {
-          if (isPending(status)) {
-            return <h1>loading...</h1>
-          } else {
-            return <h1>{data}</h1>
-          }
-        }}
-      </Await>
-    </div>
-  );
-});
 ```
 
 ### AwaitWatch
@@ -368,68 +242,35 @@ const Foo = defineComponent(() => {
 
 **示例**
 
-- vue 模板
-
 ```vue
-
 <script setup>
 import {ref} from "vue";
-import {AwaitWatch, isPending} from "vue-await-hook";
+import {AwaitWatch, isPending} from "vue-await-util";
 
 const count = ref(0);
-const deps = [count];
-const handle = async ([count]) => {
-  return "hello" + count;
-}
-const handleClick = () => {
+
+function add() {
   count.value += 1;
-};
+}
+
+const deps = [count];
+
+async function handle() {
+  return "hello" + count.value;
+}
 
 </script>
 
 <template>
   <div>
-    <h1>count - {{count}}</h1>
-    <button @click="handleClick">add</button>
+    <h1>count - {{ count }}</h1>
+    <button @click="add">add</button>
     <AwaitWatch :deps :handle #default="{status, data}">
       <h1 v-if="isPending(status)">loading...</h1>
-      <h1 v-else>{{data}}</h1>
+      <h1 v-else>{{ data }}</h1>
     </AwaitWatch>
   </div>
 </template>
-```
-
-- jsx
-
-```jsx
-import {ref, defineComponent} from "vue";
-import {AwaitWatch, isPending} from "vue-await-hook";
-
-const Foo = defineComponent(() => {
-  const count = ref(0);
-  const deps = [count];
-  const handle = async ([count]) => {
-    return "hello" + count;
-  }
-  const handleClick = () => {
-    count.value += 1;
-  };
-  return () => (
-    <div>
-      <h1>count - {count.value}</h1>
-      <button onClick={handleClick}>add</button>
-      <AwaitWatch deps={deps} handle={handle}>
-        {({status, data}) => {
-          if (isPending(status)) {
-            return <h1>loading...</h1>
-          } else {
-            return <h1>{data}</h1>
-          }
-        }}
-      </AwaitWatch>
-    </div>
-  );
-});
 ```
 
 ### AwaitWatchEffect
@@ -438,81 +279,46 @@ const Foo = defineComponent(() => {
 
 **示例**
 
-- vue 模板
-
 ```vue
-
 <script setup>
 import {ref} from "vue";
-import {AwaitWatchEffect, isPending} from "vue-await-hook";
+import {AwaitWatchEffect, isPending} from "vue-await-util";
 
 const count = ref(0);
-const handle = async () => {
+
+function add() {
+  count.value += 1;
+}
+
+async function handle() {
   return "hello" + count.value;
 }
-const handleClick = () => {
-  count.value += 1;
-};
 
 </script>
 
 <template>
   <div>
-    <h1>count - {{count}}</h1>
-    <button @click="handleClick">add</button>
+    <h1>count - {{ count }}</h1>
+    <button @click="add">add</button>
     <AwaitWatchEffect :handle #default="{status, data}">
       <h1 v-if="isPending(status)">loading...</h1>
-      <h1 v-else>{{data}}</h1>
+      <h1 v-else>{{ data }}</h1>
     </AwaitWatchEffect>
   </div>
 </template>
 ```
 
-- jsx
-
-```jsx
-import {ref, defineComponent} from "vue";
-import {AwaitWatchEffect, isPending} from "vue-await-hook";
-
-const Foo = defineComponent(() => {
-  const count = ref(0);
-  const handle = async () => {
-    return "hello" + count.value;
-  }
-  const handleClick = () => {
-    count.value += 1;
-  };
-  return () => (
-    <div>
-      <h1>count - {count.value}</h1>
-      <button onClick={handleClick}>add</button>
-      <AwaitWatchEffect handle={handle}>
-        {({status, data}) => {
-          if (isPending(status)) {
-            return <h1>loading...</h1>
-          } else {
-            return <h1>{data}</h1>
-          }
-        }}
-      </AwaitWatchEffect>
-    </div>
-  );
-});
-```
-
 ### Action
 
-> 封装状态和操作，仅供子元素使用
+> 封装状态和操作，仅供内部元素使用  
+> 合理的嵌套 `Action`，写出更加 `hooks` 思想的代码
 
 **示例**
 
-- vue 模板
-
 ```vue
-
 <script setup>
-import {ref} from "vue";
-import {Action} from "vue-await-hook";
+import {ref, computed} from "vue";
+import {Action} from "vue-await-util";
 
 function useCountAction() {
   const count = ref(0);
@@ -527,87 +333,25 @@ function useCountAction() {
   };
 }
 
-function useUserAction({count}) {
-  console.log(count.value);
-
-  const age = ref(18);
-
-  function add() {
-    age.value += 1;
-  }
+function useCalcCountAction({count}) {
+  const calcCount = computed(() => count.value + 100);
 
   return {
-    age,
-    add,
+    calcCount,
   };
 }
 
 </script>
 
 <template>
-  <Action :useAction="useCountAction" #default="{count, add}">
-    <h1>{{count.value}}</h1>
+  <Action :use-action="useCountAction" #default="{count, add}">
+    <h1>{{ count.value }}</h1>
     <button @click="add">add</button>
-    <Action :options="{count}" :useAction="useUserAction" #default="{age, add}">
-      <h1>age {{age.value}}</h1>
-      <button @click="add">add age</button>
+    <Action :options="{count}" :use-action="useCalcCountAction" #default="{calcCount}">
+      <h1>{{ calcCount.value }}</h1>
     </Action>
   </Action>
 </template>
-```
-
-- jsx
-
-```jsx
-import {ref} from "vue";
-import {Action} from "vue-await-hook";
-
-function useCountAction() {
-  const count = ref(0);
-
-  function add() {
-    count.value += 1;
-  }
-
-  return {
-    count,
-    add,
-  };
-}
-
-function useUserAction({count}) {
-  console.log(count.value);
-
-  const age = ref(18);
-
-  function add() {
-    age.value += 1;
-  }
-
-  return {
-    age,
-    add,
-  };
-}
-
-const App = defineComponent(() => () => (
-  <Action useAction={useCountAction}>
-    {({count, add}) => (
-      <>
-        <h1>{count.value}</h1>
-        <button onClick={add}>add</button>
-        <Action options={{count}} useAction={useUserAction}>
-          {({age, add}) => (
-            <>
-              <h1>age {age.value}</h1>
-              <button onClick={add}>add</button>
-            </>
-          )}
-        </Action>
-      </>
-    )}
-  </Action>
-));
 ```
 
 ### 插槽
@@ -616,12 +360,9 @@ const App = defineComponent(() => () => (
 
 **示例**
 
-- vue 模板
-
 ```vue
-
 <script setup>
-import {Host, Provision, Slotted} from "vue-await-hook";
+import {Host, Provision, Slotted} from "vue-await-util";
 
 </script>
 
@@ -645,42 +386,16 @@ import {Host, Provision, Slotted} from "vue-await-hook";
 </template>
 ```
 
-- jsx
-
-```jsx
-import {defineComponent} from "vue";
-import {Host, Provision, Slotted} from "vue-await-hook";
-
-const App = defineComponent(() => () => (
-  <Host>
-    <div>
-      <h1>hello</h1>
-      <Slotted></Slotted>
-      <Slotted name="item" value="你好"></Slotted>
-    </div>
-    <Provision>
-      <h1>hi</h1>
-    </Provision>
-    <Provision name="item">
-      {({value}) => (
-        <h1>{value}</h1>
-      )}
-    </Provision>
-  </Host>
-));
-```
-
 ### 小程序
 
 > ***直接导入的组件，小程序不能使用***
 
 ```vue
-
 <script setup>
-import {useAwait, useAwaitWatch, useAwaitWatchEffect} from "vue-await-hook";
-import Await from "vue-await-hook/dist/components/Await.vue";
-import AwaitWatch from "vue-await-hook/dist/components/AwaitWatch.vue";
-import AwaitWatchEffect from "vue-await-hook/dist/components/AwaitWatchEffect.vue";
+import {useAwait, useAwaitWatch, useAwaitWatchEffect} from "vue-await-util";
+import Await from "vue-await-util/dist/components/Await.vue";
+import AwaitWatch from "vue-await-util/dist/components/AwaitWatch.vue";
+import AwaitWatchEffect from "vue-await-util/dist/components/AwaitWatchEffect.vue";
 
 </script>
 
