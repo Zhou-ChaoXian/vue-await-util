@@ -53,8 +53,8 @@ export interface UseAwaitWatchEffectProps<T> {
 
 export type AwaitWatchEffectProps<T, U> = UseAwaitWatchEffectProps<T> & UseWatchResolve<T, U>;
 
-export interface ActionProps<S, O> {
-  useAction: (options?: O) => S;
+export interface ActionProps<A, O> {
+  useAction: (options?: O) => A;
   options?: O;
 }
 
@@ -80,7 +80,7 @@ export type AwaitSlot<T, U> = SlotsType<{ default: (resolve: ResolveData<T> & { 
 
 export type AwaitWatchSlot<T, U> = SlotsType<{ default: (resolve: ResolveData<T> & { use: U; watchOptions: WatchOptions; }) => VNode | VNode[]; }>;
 
-export type ActionSlot<S> = SlotsType<{ default: (state: S) => VNode | VNode[]; }>;
+export type ActionSlot<A> = SlotsType<{ default: (action: A) => VNode | VNode[]; }>;
 
 export type ProvisionSlot<P> = SlotsType<{ default: (props: P) => VNode | VNode[]; }>;
 
@@ -90,7 +90,7 @@ export declare const AwaitWatch: new <T = any, U = any>() => InstanceType<Define
 
 export declare const AwaitWatchEffect: new <T = any, U = any>() => InstanceType<DefineSetupFnComponent<AwaitWatchEffectProps<T, U>, {}, AwaitWatchSlot<T, U>>>;
 
-export declare const Action: new <S = any, O = any>() => InstanceType<DefineSetupFnComponent<ActionProps<S, O>, {}, ActionSlot<S>>>;
+export declare const Action: new <A = any, O = any>() => InstanceType<DefineSetupFnComponent<ActionProps<A, O>, {}, ActionSlot<A>>>;
 
 export declare const Host: new () => InstanceType<DefineSetupFnComponent>;
 

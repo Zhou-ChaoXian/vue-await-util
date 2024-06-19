@@ -88,8 +88,8 @@ const Action = defineComponent({
   },
   setup: (props, {expose, slots}) => {
     expose();
-    const state = props.useAction(props.options);
-    return () => slots.default?.(state);
+    const action = props.useAction(props.options);
+    return () => slots.default?.(action);
   }
 });
 
