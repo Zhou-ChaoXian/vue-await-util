@@ -30,7 +30,7 @@ function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd
     if (!(resolve instanceof Promise) || cacheResolve === resolve)
       return false;
     if (!Reflect.has(resolve, _tracked)) {
-      Object.defineProperty(resolve, _tracked, {value: true});
+      resolve = Object.defineProperty(resolve, _tracked, {value: true});
       cancelMap.get(cacheResolve)?.();
       cacheResolve = resolve;
       let flag = true;
@@ -140,8 +140,10 @@ function useWatchOptions(watchHandle, update) {
   return {
     update,
     unWatch: () => {
-      watchScope?.stop(false);
-      watchScope = null;
+      if (watchScope) {
+        watchScope.stop(false);
+        watchScope = null;
+      }
     },
     reWatch: () => {
       if (watchScope === null) {
