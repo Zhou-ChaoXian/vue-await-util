@@ -1,6 +1,6 @@
 "use strict";
 
-import {customRef, effectScope, getCurrentScope, markRaw, ref, watch, watchEffect} from "vue";
+import {customRef, effectScope, getCurrentScope, markRaw, readonly, ref, watch, watchEffect} from "vue";
 
 export {
   useAwait,
@@ -137,18 +137,22 @@ function useWatchOptions(watchHandle, update) {
     watchScope.run(watchHandle);
   };
   scope.run(scopeFunction);
-  return {
+  const isWatching = ref(true);
+  return readonly({
     update,
     unWatch: () => {
       if (watchScope) {
+        isWatching.value = false;
         watchScope.stop(false);
         watchScope = null;
       }
     },
     reWatch: () => {
       if (watchScope === null) {
+        isWatching.value = true;
         scope.run(scopeFunction);
       }
-    }
-  };
+    },
+    isWatching,
+  });
 }

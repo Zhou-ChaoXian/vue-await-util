@@ -62,6 +62,7 @@ export interface WatchOptions {
   update: () => void;
   unWatch: () => void;
   reWatch: () => void;
+  isWatching: boolean;
 }
 
 export declare function useAwait<T>(props: UseAwaitProps<T>): ResolveDataRef<T>;

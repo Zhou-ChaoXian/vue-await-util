@@ -71,7 +71,7 @@ function add() {
 
 ### useAwaitWatch
 
-**props** (问号表示可选属性)
+***props*** (问号表示可选属性)
 
 | `prop` (属性) |        `type` (类型)        | `description` (描述)  |
 |:------------|:-------------------------:|:--------------------|
@@ -84,7 +84,7 @@ function add() {
 | onEnd?      | (first?: boolean) => void | promise 结束时执行       |
 | onError?    |   (error?: any) => void   | promise 报错时执行       |
 
-**return** (返回值 [resolveData, watchOptions] )
+**return** (返回值 [resolveData, watchOptions])
 
 | `prop` (属性) |                `type` (类型)                 | `description` (描述) |
 |:------------|:------------------------------------------:|:-------------------|
@@ -98,6 +98,7 @@ function add() {
 | update      | () => void  | 强制刷新               |
 | unWatch     | () => void  | 取消监听依赖的变化          |
 | reWatch     | () => void  | 重新监听依赖的变化          |
+| isWatching  |   boolean   | 是否正在监听             |
 
 ```ts
 import type {WatchSource} from "vue";
@@ -153,19 +154,6 @@ const [resolveData] = useAwaitWatch({
 | onError?    |   (error?: any) => void   | promise 报错时执行      |
 
 **return** (返回值 [resolveData, watchOptions] )
-
-| `prop` (属性) |                `type` (类型)                 | `description` (描述) |
-|:------------|:------------------------------------------:|:-------------------|
-| first       |                    bool                    | 是否是第一次执行           |
-| status      | "pending" &#124; "resolve" &#124; "reject" | 当前状态               |
-| data        |                    any                     | 结果                 |
-| error       |                    any                     | 错误信息               |
-
-| `prop` (属性) | `type` (类型) | `description` (描述) |
-|:------------|:-----------:|:-------------------|
-| update      | () => void  | 强制刷新               |
-| unWatch     | () => void  | 取消监听依赖的变化          |
-| reWatch     | () => void  | 重新监听依赖的变化          |
 
 ```ts
 type OnCleanup = (cleanupFn: () => void) => void;
