@@ -9,7 +9,7 @@ export {
   AwaitWatchEffect,
   Action,
   Host,
-  Provision,
+  Tmpl,
   Slotted,
 };
 
@@ -96,19 +96,22 @@ const Action = defineComponent({
   }
 });
 
-const provisionSlotsSymbol = Symbol();
+const HostContext = Symbol();
 
 const Host = defineComponent({
   name: "Host",
   inheritAttrs: false,
   setup: (_, {expose, slots}) => {
     expose();
-    const provisionSlots = {value: null};
-    provide(provisionSlotsSymbol, provisionSlots);
+    const value = {
+      tmplSlots: undefined,
+      parent: inject(HostContext, undefined)
+    };
+    provide(HostContext, value);
     return () => {
       const children = slots.default();
-      provisionSlots.value = children.slice(1).reduce((container, item) => {
-        if (item.type === Provision) {
+      value.tmplSlots = children.slice(1).reduce((container, item) => {
+        if (item.type === Tmpl) {
           const name = item.props?.name ?? "default";
           container[name] ??= item.children?.default;
         }
@@ -119,28 +122,23 @@ const Host = defineComponent({
   }
 });
 
-const Provision = defineComponent({
-  name: "Provision",
+const Tmpl = defineComponent({
+  name: "Tmpl",
   inheritAttrs: false,
   props: {name: {type: String, default: "default"}},
-  setup: (_, {expose, slots}) => {
-    expose();
-    return () => slots.default();
-  }
+  setup: () => () => undefined,
 });
 
 const Slotted = defineComponent({
   name: "Slotted",
   inheritAttrs: false,
-  props: {
-    name: {type: String, default: "default"},
-  },
+  props: {name: {type: String, default: "default"}},
   setup: (props, {expose, attrs, slots}) => {
     expose();
-    const provisionSlots = inject(provisionSlotsSymbol);
-    provide(provisionSlotsSymbol, null);
+    const value = inject(HostContext);
+    provide(HostContext, value?.parent);
     return () => {
-      const slot = provisionSlots?.value[props.name];
+      const slot = value?.tmplSlots[props.name];
       return slot ? slot(attrs) : slots.default?.();
     };
   }

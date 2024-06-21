@@ -13,7 +13,7 @@
 - [`AwaitWatch`](#awaitwatch) 🌷🌸🌺 ( ***使用最多*** )
 - [`AwaitWatchEffect`](#awaitwatcheffect)
 - [`Action`](#action)
-- [`Host Provision Slotted`](#插槽)
+- [`Host` `Tmpl` `Slotted`](#插槽)
 - [`uniapp 小程序使用`](#小程序)
 
 ### useAwait
@@ -344,32 +344,71 @@ function useCalcCountAction({count}) {
 
 ### 插槽
 
-> 实现插槽思想的组件
+> 实现插槽思想的组件  
+> `Host` 宿主  
+> `Tmpl` 模板  
+> `Slotted` 占位  
+> `Host` 只渲染第一个子元素，其他元素都是 `Tmpl` 组件  
+> `Tmpl` 和 `Slotted` 的 `name` 一一对应，默认是 `default`  
 
 **示例**
 
 ```vue
 <script setup>
-import {Host, Provision, Slotted} from "vue-await-util";
+import {Host, Tmpl, Slotted} from "vue-await-util";
 
 </script>
 
 <template>
-  <!-- Host 只会渲染第一个子元素，其他元素都是 Provision 组件 -->
+  <!-- Host 只会渲染第一个子元素，其他元素都是 Tmpl 组件 -->
   <!-- 注意：注释也算元素，不能放在 Host 第一个位置 -->
   <Host>
     <div>
       <h1>hello</h1>
-      <!-- name 默认是 default，和 Provision 对应 -->
+      <!-- name 默认是 default，和 Tmpl 对应 -->
       <Slotted></Slotted>
       <Slotted name="item" value="你好"></Slotted>
     </div>
-    <Provision>
+    <Tmpl>
       <h1>hi</h1>
-    </Provision>
-    <Provision name="item" #default="{value}">
+    </Tmpl>
+    <Tmpl name="item" #default="{value}">
       <h1>{{ value }}</h1>
-    </Provision>
+    </Tmpl>
+  </Host>
+</template>
+```
+
+> `Tmpl` 中的 `Slotted`，和***上一层*** `Host` 的 `Tmpl` 对应  
+
+```vue
+<script setup>
+import {Host, Tmpl, Slotted} from "vue-await-util";
+
+</script>
+
+<template>
+  <Host>
+    <Host>
+      <Host>
+        <div>
+          <h1>start</h1>
+          <Slotted></Slotted>
+          <h1>end</h1>
+        </div>
+        <Tmpl>
+          <Slotted></Slotted>
+          <h1>3</h1>
+        </Tmpl>
+      </Host>
+      <Tmpl>
+        <Slotted></Slotted>
+        <h1>2</h1>
+      </Tmpl>
+    </Host>
+    <Tmpl>
+      <h1>1</h1>
+    </Tmpl>
   </Host>
 </template>
 ```
