@@ -1,6 +1,10 @@
 import type {ShallowRef, VNode, WatchSource, DefineSetupFnComponent, SlotsType} from "vue";
 
-export type Status = "pending" | "resolve" | "reject";
+declare const pendingStatus: unique symbol;
+declare const resolveStatus: unique symbol;
+declare const rejectStatus: unique symbol;
+
+export type Status = typeof pendingStatus | typeof resolveStatus | typeof rejectStatus;
 
 export type OnCleanup = (cleanupFn: () => void) => void;
 

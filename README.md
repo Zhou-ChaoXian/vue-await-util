@@ -32,13 +32,20 @@
 
 **return** (返回值是一个 `ref`)
 
-| `prop` (属性) |                `type` (类型)                 | `description` (描述) |
-|:------------|:------------------------------------------:|:-------------------|
-| first       |                    bool                    | 是否是第一次执行           |
-| status      | "pending" &#124; "resolve" &#124; "reject" | 当前状态               |
-| data        |                    any                     | 结果                 |
-| error       |                    any                     | 错误信息               |
+| `prop` (属性) | `type` (类型) | `description` (描述) |
+|:------------|:-----------:|:-------------------|
+| first       |    bool     | 是否是第一次执行           |
+| status      |   Status    | 当前状态               |
+| data        |     any     | 结果                 |
+| error       |     any     | 错误信息               |
 
+```ts
+declare const pendingStatus: unique symbol;
+declare const resolveStatus: unique symbol;
+declare const rejectStatus: unique symbol;
+
+type Status = typeof pendingStatus | typeof resolveStatus | typeof rejectStatus;
+```
 **示例**
 
 ```vue
@@ -86,12 +93,12 @@ function add() {
 
 **return** (返回值 [resolveData, watchOptions])
 
-| `prop` (属性) |                `type` (类型)                 | `description` (描述) |
-|:------------|:------------------------------------------:|:-------------------|
-| first       |                    bool                    | 是否是第一次执行           |
-| status      | "pending" &#124; "resolve" &#124; "reject" | 当前状态               |
-| data        |                    any                     | 结果                 |
-| error       |                    any                     | 错误信息               |
+| `prop` (属性) | `type` (类型) | `description` (描述) |
+|:------------|:-----------:|:-------------------|
+| first       |    bool     | 是否是第一次执行           |
+| status      |   Status    | 当前状态               |
+| data        |     any     | 结果                 |
+| error       |     any     | 错误信息               |
 
 | `prop` (属性) | `type` (类型) | `description` (描述) |
 |:------------|:-----------:|:-------------------|

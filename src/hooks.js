@@ -6,12 +6,18 @@ export {
   useAwait,
   useAwaitWatch,
   useAwaitWatchEffect,
+  isPending,
+  isResolve,
+  isReject,
 };
 
 const _tracked = Symbol(), _data = Symbol(), _error = Symbol();
+const pendingStatus = Symbol("pending");
+const resolveStatus = Symbol("resolve");
+const rejectStatus = Symbol("reject");
 
 function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd, onError}) {
-  let status = "pending";
+  let status = pendingStatus;
   let cacheResolve = null;
   let resolveValue = init;
   let first = true;
@@ -19,10 +25,10 @@ function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd
   let customTrigger = null;
   const setStatus = (resolve) => {
     if (Reflect.has(resolve, _data)) {
-      status = "resolve";
+      status = resolveStatus;
       resolveValue = Reflect.get(resolve, _data);
     } else {
-      status = "reject";
+      status = rejectStatus;
       onError?.(Reflect.get(resolve, _error));
     }
   };
@@ -38,7 +44,7 @@ function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd
         flag = false;
         cancelMap.delete(resolve);
       });
-      status = "pending";
+      status = pendingStatus;
       onStart?.(first);
       resolve.then(
         v => Object.defineProperty(resolve, _data, {value: v}),
@@ -155,4 +161,16 @@ function useWatchOptions(watchHandle, update) {
     },
     isWatching,
   });
+}
+
+function isPending(status) {
+  return status === pendingStatus;
+}
+
+function isResolve(status) {
+  return status === resolveStatus;
+}
+
+function isReject(status) {
+  return status === rejectStatus;
 }
