@@ -10,7 +10,7 @@
 - [`useAwaitWatch`](#useawaitwatch)
 - [`useAwaitWatchEffect`](#useawaitwatcheffect)
 - [`Await`](#await)
-- [`AwaitWatch`](#awaitwatch) 🌷🌸🌺 ( ***使用最多*** )
+- [`AwaitWatch`](#awaitwatch) 🌷🌸🌺 ( ***推荐使用一下*** )
 - [`AwaitWatchEffect`](#awaitwatcheffect)
 - [`Action`](#action)
 - [`Host` `Tmpl` `Slotted`](#插槽)
@@ -20,15 +20,16 @@
 
 **props** (问号表示可选属性)
 
-| `prop` (属性) |        `type` (类型)        | `description` (描述) |
-|:------------|:-------------------------:|:-------------------|
-| resolve     | Promise &#124; undefined  | 需要处理的 `promise`    |
-| init?       |            any            | 初始化的值              |
-| delay?      |          number           | 延迟，防止闪烁            |
-| jumpFirst?  |          boolean          | 跳过首次请求             |
-| onStart?    | (first?: boolean) => void | promise 开始时执行      |
-| onEnd?      | (first?: boolean) => void | promise 结束时执行      |
-| onError?    |   (error?: any) => void   | promise 报错时执行      |
+| `prop` (属性) |       `type` (类型)        | `description` (描述)    |
+|:------------|:------------------------:|:----------------------|
+| resolve     | Promise &#124; undefined | 需要处理的 `promise`       |
+| init?       |           any            | 初始化的值                 |
+| delay?      |          number          | 延迟，防止闪烁               |
+| jumpFirst?  |         boolean          | 跳过首次请求                |
+| onStart?    | (first: boolean) => void | promise 开始时执行         |
+| onEnd?      |   (value: any) => void   | promise 正确结束时执行 then  |
+| onError?    |   (error: any) => void   | promise 报错时执行 catch   |
+| onFinal?    | (first: boolean) => void | promise 结束时执行 finally |
 
 **return** (返回值是一个 `ref`)
 
@@ -46,9 +47,11 @@ declare const rejectStatus: unique symbol;
 
 type Status = typeof pendingStatus | typeof resolveStatus | typeof rejectStatus;
 ```
+
 **示例**
 
 ```vue
+
 <script setup>
 import {ref} from "vue";
 import {useAwait, isPending} from "vue-await-util";
@@ -80,16 +83,17 @@ function add() {
 
 ***props*** (问号表示可选属性)
 
-| `prop` (属性) |        `type` (类型)        | `description` (描述)  |
-|:------------|:-------------------------:|:--------------------|
-| deps?       |           Deps            | 依赖数组                |
-| handle      |          Handle           | 处理依赖数组，生成 `promise` |
-| init?       |            any            | 初始化的值               |
-| delay?      |          number           | 延迟，防止闪烁             |
-| jumpFirst?  |          boolean          | 跳过首次请求              |
-| onStart?    | (first?: boolean) => void | promise 开始时执行       |
-| onEnd?      | (first?: boolean) => void | promise 结束时执行       |
-| onError?    |   (error?: any) => void   | promise 报错时执行       |
+| `prop` (属性) |       `type` (类型)        | `description` (描述)    |
+|:------------|:------------------------:|:----------------------|
+| deps?       |           Deps           | 依赖数组                  |
+| handle      |          Handle          | 处理依赖数组，生成 `promise`   |
+| init?       |           any            | 初始化的值                 |
+| delay?      |          number          | 延迟，防止闪烁               |
+| jumpFirst?  |         boolean          | 跳过首次请求                |
+| onStart?    | (first: boolean) => void | promise 开始时执行         |
+| onEnd?      |   (value: any) => void   | promise 正确结束时执行 then  |
+| onError?    |   (error: any) => void   | promise 报错时执行 catch   |
+| onFinal?    | (first: boolean) => void | promise 结束时执行 finally |
 
 **return** (返回值 [resolveData, watchOptions])
 
@@ -118,6 +122,7 @@ type Handle<T> = (value?: any[], oldValue?: any[], onCleanup?: OnCleanup) => Pro
 **示例**
 
 ```vue
+
 <script setup>
 import {ref} from "vue";
 import {useAwaitWatch, isPending} from "vue-await-util";
@@ -151,14 +156,15 @@ const [resolveData] = useAwaitWatch({
 
 **props** (问号表示可选属性)
 
-| `prop` (属性) |        `type` (类型)        | `description` (描述) |
-|:------------|:-------------------------:|:-------------------|
-| handle      |          Handle           | 生成 `promise`       |
-| init?       |            any            | 初始化的值              |
-| delay?      |          number           | 延迟，防止闪烁            |
-| onStart?    | (first?: boolean) => void | promise 开始时执行      |
-| onEnd?      | (first?: boolean) => void | promise 结束时执行      |
-| onError?    |   (error?: any) => void   | promise 报错时执行      |
+| `prop` (属性) |       `type` (类型)        | `description` (描述)    |
+|:------------|:------------------------:|:----------------------|
+| handle      |          Handle          | 生成 `promise`          |
+| init?       |           any            | 初始化的值                 |
+| delay?      |          number          | 延迟，防止闪烁               |
+| onStart?    | (first: boolean) => void | promise 开始时执行         |
+| onEnd?      |   (value: any) => void   | promise 正确结束时执行 then  |
+| onError?    |   (error: any) => void   | promise 报错时执行 catch   |
+| onFinal?    | (first: boolean) => void | promise 结束时执行 finally |
 
 **return** (返回值 [resolveData, watchOptions] )
 
@@ -170,6 +176,7 @@ type Handle<T> = (onCleanup?: OnCleanup) => Promise<T>;
 **示例**
 
 ```vue
+
 <script setup>
 import {ref} from "vue";
 import {useAwaitWatchEffect, isPending} from "vue-await-util";
@@ -205,6 +212,7 @@ const [resolveData] = useAwaitWatchEffect({
 **示例**
 
 ```vue
+
 <script setup>
 import {ref} from "vue";
 import {Await, isPending} from "vue-await-util";
@@ -238,6 +246,7 @@ function add() {
 **示例**
 
 ```vue
+
 <script setup>
 import {ref} from "vue";
 import {AwaitWatch, isPending} from "vue-await-util";
@@ -275,6 +284,7 @@ async function handle() {
 **示例**
 
 ```vue
+
 <script setup>
 import {ref} from "vue";
 import {AwaitWatchEffect, isPending} from "vue-await-util";
@@ -311,6 +321,7 @@ async function handle() {
 **示例**
 
 ```vue
+
 <script setup>
 import {ref, computed} from "vue";
 import {Action} from "vue-await-util";
@@ -356,11 +367,12 @@ function useCalcCountAction({count}) {
 > `Tmpl` 模板  
 > `Slotted` 占位  
 > `Host` 只渲染第一个子元素，其他元素都是 `Tmpl` 组件  
-> `Tmpl` 和 `Slotted` 的 `name` 一一对应，默认是 `default`  
+> `Tmpl` 和 `Slotted` 的 `name` 一一对应，默认是 `default`
 
 **示例**
 
 ```vue
+
 <script setup>
 import {Host, Tmpl, Slotted} from "vue-await-util";
 
@@ -386,9 +398,10 @@ import {Host, Tmpl, Slotted} from "vue-await-util";
 </template>
 ```
 
-> `Tmpl` 中的 `Slotted`，和***上一层*** `Host` 的 `Tmpl` 对应  
+> `Tmpl` 中的 `Slotted`，和***上一层*** `Host` 的 `Tmpl` 对应
 
 ```vue
+
 <script setup>
 import {Host, Tmpl, Slotted} from "vue-await-util";
 
@@ -425,6 +438,7 @@ import {Host, Tmpl, Slotted} from "vue-await-util";
 > ***直接导入的组件，小程序不能使用***
 
 ```vue
+
 <script setup>
 import {useAwait, useAwaitWatch, useAwaitWatchEffect} from "vue-await-util";
 import Await from "vue-await-util/dist/components/Await.vue";
