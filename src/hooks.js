@@ -43,6 +43,7 @@ function useAwait(
     });
   } else {
     if (!(resolve instanceof Promise)) {
+      first = false;
       status = resolveStatus;
       generateResolveData();
     }
