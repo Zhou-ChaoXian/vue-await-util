@@ -35,9 +35,10 @@ export interface AwaitOptions<T, E = any> {
   init?: T;
   delay?: number;
   jumpFirst?: boolean;
-  onStart?: (first?: boolean) => void;
-  onEnd?: (first?: boolean) => void;
-  onError?: (error?: E) => void;
+  onStart?: (first: boolean) => void;
+  onEnd?: (value: T) => void;
+  onError?: (error: E) => void;
+  onFinal?: (first: boolean) => void;
 }
 
 export declare function useAwait<T = any, E = any>(options: AwaitOptions<T, E>): ResolveDataRef<T>;
@@ -69,9 +70,10 @@ export interface AwaitWatchOptions<T, Deps extends WatchSource[] = WatchSource[]
   init?: T;
   delay?: number;
   jumpFirst?: boolean;
-  onStart?: (first?: boolean) => void;
-  onEnd?: (first?: boolean) => void;
-  onError?: (error?: E) => void;
+  onStart?: (first: boolean) => void;
+  onEnd?: (value: T) => void;
+  onError?: (error: E) => void;
+  onFinal?: (first: boolean) => void;
 }
 
 export declare function useAwaitWatch<T = any, E = any>(options: AwaitWatchOptions<T, E>): [ResolveDataRef<T, E>, WatchOptions];
@@ -88,9 +90,10 @@ export interface AwaitWatchEffectOptions<T, E = any> {
   handle: (onCleanup?: OnCleanup) => Promise<T>;
   init?: T;
   delay?: number;
-  onStart?: (first?: boolean) => void;
-  onEnd?: (first?: boolean) => void;
-  onError?: (error?: E) => void;
+  onStart?: (first: boolean) => void;
+  onEnd?: (value: T) => void;
+  onError?: (error: E) => void;
+  onFinal?: (first: boolean) => void;
 }
 
 export declare function useAwaitWatchEffect<T = any, E = any>(options: AwaitWatchEffectOptions<T, E>): [ResolveDataRef<T, E>, WatchOptions];

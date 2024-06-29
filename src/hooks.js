@@ -16,14 +16,38 @@ const pendingStatus = Symbol("pending");
 const resolveStatus = Symbol("resolve");
 const rejectStatus = Symbol("reject");
 
-function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd, onError}) {
-  let status = resolve instanceof Promise ? pendingStatus : resolveStatus;
+function useAwait(
+  {
+    resolve,
+    init,
+    delay = 300,
+    jumpFirst = false,
+    onStart,
+    onEnd,
+    onError,
+    onFinal,
+  }
+) {
+  let status = pendingStatus;
   let cacheResolve = null;
   let resolveValue = init;
+  let resolveData = null;
+  let customTrigger = null;
   let first = true;
   const cancelMap = new Map();
-  let customTrigger = null;
-  let resolveData = null;
+  if (jumpFirst) {
+    first = false;
+    resolve = Object.defineProperties(Promise.resolve(init), {
+      [_tracked]: {value: true},
+      [_data]: {value: init},
+    });
+  } else {
+    if (!(resolve instanceof Promise)) {
+      status = resolveStatus;
+      generateResolveData();
+    }
+  }
+  validate(resolve);
 
   function generateResolveData() {
     resolveData = markRaw({
@@ -38,6 +62,7 @@ function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd
     if (Reflect.has(resolve, _data)) {
       status = resolveStatus;
       resolveValue = Reflect.get(resolve, _data);
+      onEnd?.(resolveValue);
     } else {
       status = rejectStatus;
       onError?.(Reflect.get(resolve, _error));
@@ -45,50 +70,42 @@ function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd
   }
 
   function validate(resolve) {
-    if (!(resolve instanceof Promise) || cacheResolve === resolve)
-      return false;
-    if (!Reflect.has(resolve, _tracked)) {
-      resolve = Object.defineProperty(resolve, _tracked, {value: true});
-      cancelMap.get(cacheResolve)?.();
-      cacheResolve = resolve;
-      let flag = true;
-      cancelMap.set(resolve, () => {
-        flag = false;
-        cancelMap.delete(resolve);
-      });
-      status = pendingStatus;
-      onStart?.(first);
-      resolve.then(
-        v => Object.defineProperty(resolve, _data, {value: v}),
-        e => Object.defineProperty(resolve, _error, {value: e})
-      ).finally(() => {
-        setTimeout(() => {
-          if (flag) {
-            cancelMap.delete(resolve);
-            onEnd?.(first);
-            first = false;
-            setStatus(resolve);
-            generateResolveData();
-            customTrigger();
-          }
-        }, delay);
-      });
-    } else {
-      cacheResolve = resolve;
-      setStatus(resolve);
+    if (resolve instanceof Promise && cacheResolve !== resolve) {
+      if (Reflect.has(resolve, _tracked)) {
+        cacheResolve = resolve;
+        setStatus(resolve);
+      } else {
+        resolve = Object.defineProperty(resolve, _tracked, {value: true});
+        cancelMap.get(cacheResolve)?.();
+        cacheResolve = resolve;
+        let flag = true;
+        cancelMap.set(resolve, () => {
+          flag = false;
+          cancelMap.delete(resolve);
+        });
+        status = pendingStatus;
+        onStart?.(first);
+        resolve.then(
+          v => Object.defineProperty(resolve, _data, {value: v}),
+          e => Object.defineProperty(resolve, _error, {value: e})
+        ).finally(() => {
+          setTimeout(() => {
+            if (flag) {
+              cancelMap.delete(resolve);
+              setStatus(resolve);
+              onFinal?.(first);
+              first = false;
+              generateResolveData();
+              customTrigger();
+            }
+          }, delay);
+        });
+      }
+      generateResolveData();
+      customTrigger();
     }
-    generateResolveData();
-    return true;
   }
 
-  if (jumpFirst) {
-    first = false;
-    resolve = Object.defineProperties(Promise.resolve(init), {
-      [_tracked]: {value: true},
-      [_data]: {value: init},
-    });
-  }
-  validate(resolve);
   return customRef((track, trigger) => {
     customTrigger = trigger;
     return {
@@ -97,14 +114,26 @@ function useAwait({resolve, init, delay = 300, jumpFirst = false, onStart, onEnd
         return resolveData;
       },
       set(value) {
-        validate(value) && trigger();
+        validate(value);
       }
     };
   });
 }
 
-function useAwaitWatch({deps = [], handle, init, delay = 300, jumpFirst = false, onStart, onEnd, onError}) {
-  const props = {resolve: null, init, delay, jumpFirst, onStart, onEnd, onError};
+function useAwaitWatch(
+  {
+    deps = [],
+    handle,
+    init,
+    delay = 300,
+    jumpFirst = false,
+    onStart,
+    onEnd,
+    onError,
+    onFinal,
+  }
+) {
+  const props = {resolve: null, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
   const resolveData = useAwait(props);
   const [updateFlag, update] = useUpdate(resolveData);
   let jumpFlag = true;
@@ -121,8 +150,18 @@ function useAwaitWatch({deps = [], handle, init, delay = 300, jumpFirst = false,
   return [resolveData, watchOptions];
 }
 
-function useAwaitWatchEffect({handle, init, delay = 300, onStart, onEnd, onError}) {
-  const props = {resolve: null, init, delay, onStart, onEnd, onError};
+function useAwaitWatchEffect(
+  {
+    handle,
+    init,
+    delay = 300,
+    onStart,
+    onEnd,
+    onError,
+    onFinal,
+  }
+) {
+  const props = {resolve: null, init, delay, onStart, onEnd, onError, onFinal};
   const resolveData = useAwait(props);
   const [updateFlag, update] = useUpdate(resolveData);
   const watchHandle = () => {

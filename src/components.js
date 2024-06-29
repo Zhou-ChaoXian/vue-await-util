@@ -24,7 +24,8 @@ const Await = defineComponent({
     jumpFirst: {type: Boolean, default: false},
     onStart: {type: Function},
     onEnd: {type: Function},
-    onError: {type: Function}
+    onError: {type: Function},
+    onFinal: {type: Function},
   },
   setup: (props, {slots, expose}) => {
     expose();
@@ -50,7 +51,8 @@ const AwaitWatch = defineComponent({
     jumpFirst: {type: Boolean, default: false},
     onStart: {type: Function},
     onEnd: {type: Function},
-    onError: {type: Function}
+    onError: {type: Function},
+    onFinal: {type: Function},
   },
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatch(props);
@@ -71,7 +73,8 @@ const AwaitWatchEffect = defineComponent({
     delay: {type: Number, default: 300},
     onStart: {type: Function},
     onEnd: {type: Function},
-    onError: {type: Function}
+    onError: {type: Function},
+    onFinal: {type: Function},
   },
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatchEffect(props);
