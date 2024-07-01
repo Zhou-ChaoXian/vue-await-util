@@ -1,9 +1,10 @@
 "use strict";
 
-import {customRef, effectScope, getCurrentScope, markRaw, readonly, ref, watch, watchEffect} from "vue";
+import {computed, customRef, effectScope, getCurrentScope, markRaw, readonly, ref, watch, watchEffect} from "vue";
 
 export {
   useAwait,
+  useAwaitState,
   useAwaitWatch,
   useAwaitWatchEffect,
   isPending,
@@ -15,6 +16,7 @@ const _tracked = Symbol(), _data = Symbol(), _error = Symbol();
 const pendingStatus = Symbol("pending");
 const resolveStatus = Symbol("resolve");
 const rejectStatus = Symbol("reject");
+const resolveSymbol = Symbol();
 
 function useAwait(
   {
@@ -41,14 +43,12 @@ function useAwait(
       [_tracked]: {value: true},
       [_data]: {value: init},
     });
-  } else {
-    if (!(resolve instanceof Promise)) {
-      first = false;
-      status = resolveStatus;
-      generateResolveData();
-    }
   }
-  validate(resolve);
+  if (!validate(resolve) && resolve !== resolveSymbol) {
+    first = false;
+    status = resolveStatus;
+    generateResolveData();
+  }
 
   function generateResolveData() {
     resolveData = markRaw({
@@ -103,7 +103,7 @@ function useAwait(
         });
       }
       generateResolveData();
-      customTrigger();
+      return true;
     }
   }
 
@@ -115,10 +115,43 @@ function useAwait(
         return resolveData;
       },
       set(value) {
-        validate(value);
+        if (validate(value)) {
+          trigger();
+        }
       }
     };
   });
+}
+
+function useAwaitState(
+  {
+    deps = [],
+    handle,
+    init,
+    delay = 300,
+    jumpFirst = false,
+    onStart,
+    onEnd,
+    onError,
+    onFinal,
+  }
+) {
+  let watchDeps = null;
+  watch([() => null, ...deps], (value) => {
+    watchDeps = value.slice(1);
+  }, {immediate: true});
+  const resolve = jumpFirst ? null : handle(watchDeps);
+  const props = {resolve, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
+  const resolveData = useAwait(props);
+  const setResolve = (resolve) => {
+    if (resolveData.value.first) {
+      return;
+    }
+    resolveData.value = resolve instanceof Promise ?
+      resolve.then(value => handle(watchDeps, value)) :
+      handle(watchDeps, resolve);
+  };
+  return [computed(() => resolveData.value), setResolve];
 }
 
 function useAwaitWatch(
@@ -134,21 +167,23 @@ function useAwaitWatch(
     onFinal,
   }
 ) {
-  const props = {resolve: null, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
+  const props = {resolve: resolveSymbol, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
   const resolveData = useAwait(props);
   const [updateFlag, update] = useUpdate(resolveData);
-  let jumpFlag = true;
+  let first = true;
   const watchHandle = () => {
     watch([updateFlag, ...deps], (value, oldValue, onCleanup) => {
-      if (jumpFirst && jumpFlag) {
-        jumpFlag = false;
-        return;
+      if (first) {
+        first = false;
+        if (jumpFirst) {
+          return;
+        }
       }
       resolveData.value = handle(value.slice(1), oldValue.slice(1), onCleanup);
     }, {immediate: true});
   };
   const watchOptions = useWatchOptions(watchHandle, update);
-  return [resolveData, watchOptions];
+  return [computed(() => resolveData.value), watchOptions];
 }
 
 function useAwaitWatchEffect(
@@ -162,7 +197,7 @@ function useAwaitWatchEffect(
     onFinal,
   }
 ) {
-  const props = {resolve: null, init, delay, onStart, onEnd, onError, onFinal};
+  const props = {resolve: resolveSymbol, init, delay, onStart, onEnd, onError, onFinal};
   const resolveData = useAwait(props);
   const [updateFlag, update] = useUpdate(resolveData);
   const watchHandle = () => {
@@ -172,7 +207,7 @@ function useAwaitWatchEffect(
     });
   };
   const watchOptions = useWatchOptions(watchHandle, update);
-  return [resolveData, watchOptions];
+  return [computed(() => resolveData.value), watchOptions];
 }
 
 function useUpdate(resolveData) {

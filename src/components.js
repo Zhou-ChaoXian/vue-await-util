@@ -1,10 +1,11 @@
 "use strict";
 
-import {defineComponent, inject, provide, shallowReadonly, watch} from "vue";
-import {useAwait, useAwaitWatch, useAwaitWatchEffect} from "./hooks.js";
+import {defineComponent, inject, provide, computed, watch} from "vue";
+import {useAwait, useAwaitState, useAwaitWatch, useAwaitWatchEffect} from "./hooks.js";
 
 export {
   Await,
+  AwaitState,
   AwaitWatch,
   AwaitWatchEffect,
   Action,
@@ -30,12 +31,35 @@ const Await = defineComponent({
   setup: (props, {slots, expose}) => {
     expose();
     const resolveData = useAwait(props);
-    const readonlyResolveData = shallowReadonly(resolveData);
+    const readonlyResolveData = computed(() => resolveData.value);
     const use = props.useResolve?.(readonlyResolveData);
     watch(() => props.resolve, (value) => {
       resolveData.value = value;
     });
     return () => slots.default?.({...resolveData.value, use});
+  }
+});
+
+const AwaitState = defineComponent({
+  name: "AwaitState",
+  inheritAttrs: false,
+  props: {
+    deps: {type: Array},
+    handle: {required: true, type: Function},
+    init: {default: undefined},
+    useResolve: {type: Function},
+    delay: {type: Number, default: 300},
+    jumpFirst: {type: Boolean, default: false},
+    onStart: {type: Function},
+    onEnd: {type: Function},
+    onError: {type: Function},
+    onFinal: {type: Function},
+  },
+  setup: (props, {slots, expose}) => {
+    const [resolveData, setResolve] = useAwaitState(props);
+    const use = props.useResolve?.(resolveData, setResolve);
+    expose({setResolve});
+    return () => slots.default?.({...resolveData.value, setResolve, use});
   }
 });
 
@@ -56,8 +80,7 @@ const AwaitWatch = defineComponent({
   },
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatch(props);
-    const readonlyResolveData = shallowReadonly(resolveData);
-    const use = props.useResolve?.(readonlyResolveData, watchOptions);
+    const use = props.useResolve?.(resolveData, watchOptions);
     expose(watchOptions);
     return () => slots.default?.({...resolveData.value, watchOptions, use});
   }
@@ -78,8 +101,7 @@ const AwaitWatchEffect = defineComponent({
   },
   setup: (props, {slots, expose}) => {
     const [resolveData, watchOptions] = useAwaitWatchEffect(props);
-    const readonlyResolveData = shallowReadonly(resolveData);
-    const use = props.useResolve?.(readonlyResolveData, watchOptions);
+    const use = props.useResolve?.(resolveData, watchOptions);
     expose(watchOptions);
     return () => slots.default?.({...resolveData.value, watchOptions, use});
   }
