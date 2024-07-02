@@ -6,15 +6,17 @@
 
 1. [`useAwait`](#useawait)
 2. [`useAwaitState`](#useawaitstate)
-3. [`useAwaitWatch`](#useawaitwatch)
-4. [`useAwaitWatchEffect`](#useawaitwatcheffect)
-5. [`Await`](#await)
-6. [`AwaitState`](#awaitstate)
-7. [`AwaitWatch`](#awaitwatch) 🌷🌸🌺 ( ***推荐使用一下*** )
-8. [`AwaitWatchEffect`](#awaitwatcheffect)
-9. [`Action`](#action)
-10. [`Host` `Tmpl` `Slotted`](#插槽)
-11. [`uniapp 小程序使用`](#小程序)
+3. [`useAwaitReducer`](#useawaitreducer)
+4. [`useAwaitWatch`](#useawaitwatch)
+5. [`useAwaitWatchEffect`](#useawaitwatcheffect)
+6. [`Await`](#await)
+7. [`AwaitState`](#awaitstate)
+8. [`AwaitReducer`](#awaitreducer)
+9. [`AwaitWatch`](#awaitwatch) 🌷🌸🌺 ( ***推荐使用一下*** )
+10. [`AwaitWatchEffect`](#awaitwatcheffect)
+11. [`Action`](#action)
+12. [`Host` `Tmpl` `Slotted`](#插槽)
+13. [`uniapp 小程序使用`](#小程序)
 
 ### useAwait
 
@@ -105,13 +107,6 @@ async function handle() {
 
 **return** (返回值 [resolveData, setResolve])
 
-| `prop` (属性) | `type` (类型) | `description` (描述) |
-|:------------|:-----------:|:-------------------|
-| first       |    bool     | 是否是第一次执行           |
-| status      |   Status    | 当前状态               |
-| data        |     any     | 结果                 |
-| error       |     any     | 错误信息               |
-
 ```ts
 import type {WatchSource} from "vue";
 
@@ -161,6 +156,90 @@ function add() {
 </template>
 ```
 
+### useAwaitReducer
+
+***props*** (问号表示可选属性)
+
+| `prop` (属性)   |             `type` (类型)             | `description` (描述)    |
+|:--------------|:-----------------------------------:|:----------------------|
+| deps?         |                Deps                 | 依赖数组                  |
+| handle        | (deps: any[], arg?: any) => Promise | 处理依赖数组，生成 `promise`   |
+| reducersDeps? |         Record<string, any>         | reducers依赖            |
+| reducers?     |              Reducers               | reducers              |
+| init?         |                 any                 | 初始化的值                 |
+| delay?        |               number                | 延迟，防止闪烁               |
+| jumpFirst?    |               boolean               | 跳过首次请求                |
+| onStart?      |      (first: boolean) => void       | promise 开始时执行         |
+| onEnd?        |        (value: any) => void         | promise 正确结束时执行 then  |
+| onError?      |        (error: any) => void         | promise 报错时执行 catch   |
+| onFinal?      |      (first: boolean) => void       | promise 结束时执行 finally |
+
+**return** (返回值 [resolveData, dispatch, actions])
+
+```ts
+type Reducer = (action: { type: string; payload?: any; deps: any[] }) => Promise<any> | any;
+type Reducers = Record<string, Reducer> | (() => Record<string, Reducer>);
+
+type Dispatch = (action?: { type: string; payload?: any; }) => void;
+type Actions = Record<string, (payload?: any) => { type: string; payload?: any; }>;
+```
+
+***示例***
+
+```vue
+
+<script setup>
+import {ref} from "vue";
+import {isPending, useAwaitReducer} from "vue-await-util";
+import {Skeleton, Spin, Button, ButtonGroup, Flex} from "ant-design-vue";
+
+const count = ref(0);
+
+function add() {
+  count.value += 1;
+}
+
+const [resolve, dispatch, actions] = useAwaitReducer({
+  deps: [count],
+  reducersDeps: {
+    test1: [count],
+    test2: [count],
+  },
+  handle: async ([count], arg) => {
+    console.log("arg", arg);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return "hello" + count;
+  },
+  reducers: {
+    test1: async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    },
+    test2: (action) => {
+      console.log("test2", action);
+    }
+  }
+});
+
+</script>
+
+<template>
+  <Skeleton :loading="resolve.first">
+    <Spin :spinning="isPending(resolve.status)">
+      <Flex vertical justify="center" align="center" gap="middle">
+        <h1>count - {{ count }}</h1>
+        <h1>{{ resolve.data }}</h1>
+        <ButtonGroup>
+          <Button @click="add">add</Button>
+          <Button @click="dispatch()">update</Button>
+          <Button @click="dispatch({type: 'test1'})">test1</Button>
+          <Button @click="dispatch(actions.test2('111'))">test2</Button>
+        </ButtonGroup>
+      </Flex>
+    </Spin>
+  </Skeleton>
+</template>
+```
+
 ### useAwaitWatch
 
 ***props*** (问号表示可选属性)
@@ -178,13 +257,6 @@ function add() {
 | onFinal?    | (first: boolean) => void | promise 结束时执行 finally |
 
 **return** (返回值 [resolveData, watchOptions])
-
-| `prop` (属性) | `type` (类型) | `description` (描述) |
-|:------------|:-----------:|:-------------------|
-| first       |    bool     | 是否是第一次执行           |
-| status      |   Status    | 当前状态               |
-| data        |     any     | 结果                 |
-| error       |     any     | 错误信息               |
 
 | `prop` (属性) | `type` (类型) | `description` (描述) |
 |:------------|:-----------:|:-------------------|
@@ -393,6 +465,69 @@ async function handle([count], arg) {
       </Spin>
     </Skeleton>
   </AwaitState>
+</template>
+```
+
+### AwaitReducer
+
+> 封装 `useAwaitReducer`
+
+**示例**
+
+```vue
+
+<script setup>
+import {ref} from "vue";
+import {isPending, AwaitReducer} from "vue-await-util";
+import {Skeleton, Spin, Button, ButtonGroup, Flex} from "ant-design-vue";
+
+const count = ref(0);
+
+function add() {
+  count.value += 1;
+}
+
+const props = {
+  deps: [count],
+  reducersDeps: {
+    test1: [count],
+    test2: [count],
+  },
+  handle: async ([count], arg) => {
+    console.log("arg", arg);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return "hello" + count;
+  },
+  reducers: {
+    test1: async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    },
+    test2: (action) => {
+      console.log("test2", action);
+    }
+  }
+};
+
+
+</script>
+
+<template>
+  <AwaitReducer v-bind="props" #default="{first, status, data, dispatch, actions}">
+    <Skeleton :loading="first">
+      <Spin :spinning="isPending(status)">
+        <Flex vertical justify="center" align="center" gap="middle">
+          <h1>count - {{ count }}</h1>
+          <h1>{{ data }}</h1>
+          <ButtonGroup>
+            <Button @click="add">add</Button>
+            <Button @click="dispatch()">update</Button>
+            <Button @click="dispatch({type: 'test1'})">test1</Button>
+            <Button @click="dispatch(actions.test2('111'))">test2</Button>
+          </ButtonGroup>
+        </Flex>
+      </Spin>
+    </Skeleton>
+  </AwaitReducer>
 </template>
 ```
 
@@ -613,16 +748,14 @@ import {Host, Tmpl, Slotted} from "vue-await-util";
 
 ### 小程序
 
-> ***直接导入的组件，小程序不能使用***
+> ***直接导入的组件，小程序不能使用***  
+> 小程序只能使用 `hook`，组件在 `vue-await-util/dist/components` 目录下
 
 ```vue
 
 <script setup>
-import {useAwait, useAwaitState, useAwaitWatch, useAwaitWatchEffect} from "vue-await-util";
-import Await from "vue-await-util/dist/components/Await.vue";
-import AwaitState from "vue-await-util/dist/components/AwaitState.vue";
+import {useAwaitWatch} from "vue-await-util";
 import AwaitWatch from "vue-await-util/dist/components/AwaitWatch.vue";
-import AwaitWatchEffect from "vue-await-util/dist/components/AwaitWatchEffect.vue";
 
 </script>
 

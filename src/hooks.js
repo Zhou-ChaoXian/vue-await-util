@@ -5,6 +5,7 @@ import {computed, customRef, effectScope, getCurrentScope, markRaw, readonly, re
 export {
   useAwait,
   useAwaitState,
+  useAwaitReducer,
   useAwaitWatch,
   useAwaitWatchEffect,
   isPending,
@@ -125,7 +126,7 @@ function useAwait(
 
 function useAwaitState(
   {
-    deps = [],
+    deps,
     handle,
     init,
     delay = 300,
@@ -136,13 +137,15 @@ function useAwaitState(
     onFinal,
   }
 ) {
-  let watchDeps = null;
-  watch([() => null, ...deps], (value) => {
-    watchDeps = value.slice(1);
-  }, {immediate: true});
+  let watchDeps = [];
+  if (deps && deps.length > 0) {
+    watch([() => null, ...deps], (value) => {
+      watchDeps = value.slice(1);
+    }, {immediate: true});
+  }
   const resolve = jumpFirst ? null : handle(watchDeps);
-  const props = {resolve, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
-  const resolveData = useAwait(props);
+  const options = {resolve, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
+  const resolveData = useAwait(options);
   const setResolve = (resolve) => {
     if (resolveData.value.first) {
       return;
@@ -152,6 +155,52 @@ function useAwaitState(
       handle(watchDeps, resolve);
   };
   return [computed(() => resolveData.value), setResolve];
+}
+
+function useAwaitReducer(
+  {
+    deps,
+    handle,
+    reducersDeps,
+    reducers: reducersOrFunction,
+    init,
+    delay = 300,
+    jumpFirst = false,
+    onStart,
+    onEnd,
+    onError,
+    onFinal,
+  }
+) {
+  const reducers = typeof reducersOrFunction === "function" ? reducersOrFunction() : (reducersOrFunction ?? {});
+  const watchReducersDeps = {};
+  if (reducersDeps) {
+    Object.entries(reducersDeps).forEach(([key, deps]) => {
+      if (deps.length > 0) {
+        watch([() => null, ...deps], (value) => {
+          watchReducersDeps[key] = value.slice(1);
+        }, {immediate: true});
+      }
+    });
+  }
+  const options = {deps, handle, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
+  const [resolveData, setResolve] = useAwaitState(options);
+  const dispatch = (action) => {
+    if (action) {
+      const {type, payload} = action;
+      const reducer = reducers[type];
+      if (typeof reducer === "function") {
+        setResolve(reducer({type, payload, deps: watchReducersDeps[type]}));
+      }
+    } else {
+      setResolve();
+    }
+  };
+  const actions = Object.keys(reducers).reduce((obj, type) => {
+    obj[type] = (payload) => ({type, payload});
+    return obj;
+  }, {});
+  return [resolveData, dispatch, actions];
 }
 
 function useAwaitWatch(
@@ -167,8 +216,8 @@ function useAwaitWatch(
     onFinal,
   }
 ) {
-  const props = {resolve: resolveSymbol, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
-  const resolveData = useAwait(props);
+  const options = {resolve: resolveSymbol, init, delay, jumpFirst, onStart, onEnd, onError, onFinal};
+  const resolveData = useAwait(options);
   const [updateFlag, update] = useUpdate(resolveData);
   let first = true;
   const watchHandle = () => {
@@ -197,8 +246,8 @@ function useAwaitWatchEffect(
     onFinal,
   }
 ) {
-  const props = {resolve: resolveSymbol, init, delay, onStart, onEnd, onError, onFinal};
-  const resolveData = useAwait(props);
+  const options = {resolve: resolveSymbol, init, delay, onStart, onEnd, onError, onFinal};
+  const resolveData = useAwait(options);
   const [updateFlag, update] = useUpdate(resolveData);
   const watchHandle = () => {
     watchEffect((onCleanup) => {

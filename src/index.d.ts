@@ -79,6 +79,54 @@ export type AwaitStateSlot<T, Arg = any, U = any, E = any> = SlotsType<{ default
 
 export declare const AwaitState: new <T = any, Deps extends WatchSource[] = WatchSource[], Arg = any, U = any, E = any>() => InstanceType<DefineSetupFnComponent<AwaitStateProps<T, Deps, Arg, U, E>, {}, AwaitStateSlot<T, Arg, U, E>>>;
 
+export interface ActionType<T extends string = string, P = any> {
+  type: T;
+  payload?: P;
+}
+
+export type Reducer<R = any, T extends string = string, P = any, D = any> = (action: ActionType<T, P> & { deps: D; }) => R | Promise<R>;
+
+export type Reducers = Record<string, Reducer> | (() => Record<string, Reducer>);
+
+export interface AwaitReducerOptions<T, Rs extends Reducers = Reducers, Deps = any, RsDeps extends Record<string, any> = Record<string, any>, Arg = any, E = any> {
+  deps?: Deps;
+  handle: (deps: Deps, arg?: Arg) => Promise<T>;
+  reducersDeps?: RsDeps;
+  reducers?: Rs;
+  init?: T;
+  delay?: number;
+  jumpFirst?: boolean;
+  onStart?: (first: boolean) => void;
+  onEnd?: (value: T) => void;
+  onError?: (error: E) => void;
+  onFinal?: (first: boolean) => void;
+}
+
+export interface Dispatch<T extends string = string, P = any> {
+  (action?: ActionType<T, P>): void;
+}
+
+type ReturnTypeOrSelf<T> = T extends (...args: any[]) => infer R ? R : T;
+
+type ReducersKey<T> = ReturnTypeOrSelf<T> extends Record<string, any> ? {
+  [K in keyof ReturnTypeOrSelf<T>]: ReturnTypeOrSelf<T>[K] extends Reducer ? K extends string ? K : never : never;
+} : never;
+
+type DispatchActions<T> = ReturnTypeOrSelf<T> extends Record<string, any> ? {
+  [K in keyof ReturnTypeOrSelf<T>]: ReturnTypeOrSelf<T>[K] extends Reducer<infer R, infer T1, infer P, infer D> ? K extends string ? (payload?: P) => ActionType<K, P> : never : never;
+} : never;
+
+export declare function useAwaitReducer<T = any, Rs extends Reducers = Reducers, Deps = any, RsDeps extends Record<string, any> = Record<string, any>, Arg = any, E = any>(options: AwaitReducerOptions<T, Rs, Deps, RsDeps, Arg, E>): [ReadonlyResolveData<T, E>, Dispatch<ReducersKey<Rs>[keyof ReducersKey<Rs>]>, DispatchActions<Rs>];
+
+export type AwaitReducerProps<T, Rs extends Reducers = Reducers, Deps = any, RsDeps extends Record<string, any> = Record<string, any>, Arg = any, U = any, E = any> =
+  AwaitReducerOptions<T, Rs, Deps, RsDeps, Arg, E> & {
+  useResolve?: (resolve: ReadonlyResolveData<T, E>, dispatch: Dispatch<ReducersKey<Rs>[keyof ReducersKey<Rs>]>, actions: DispatchActions<Rs>) => U;
+};
+
+export type AwaitReducerSlot<T, Rs extends Reducers = Reducers, U = any, E = any> = SlotsType<{ default: (resolve: ResolveData<T, E> & { use: U; dispatch: Dispatch<ReducersKey<Rs>[keyof ReducersKey<Rs>]>; actions: DispatchActions<Rs>; }) => VNode | VNode[]; }>;
+
+export declare const AwaitReducer: new<T = any, Rs extends Reducers = Reducers, Deps = any, RsDeps extends Record<string, any> = Record<string, any>, Arg = any, U = any, E = any>() => InstanceType<DefineSetupFnComponent<AwaitReducerProps<T, Rs, Deps, RsDeps, Arg, U, E>, {}, AwaitReducerSlot<T, Rs, U, E>>>;
+
 export type OnCleanup = (cleanupFn: () => void) => void;
 
 export type WatchOptions = DeepReadonly<UnwrapNestedRefs<{

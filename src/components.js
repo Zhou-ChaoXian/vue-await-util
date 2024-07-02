@@ -1,11 +1,12 @@
 "use strict";
 
 import {defineComponent, inject, provide, computed, watch} from "vue";
-import {useAwait, useAwaitState, useAwaitWatch, useAwaitWatchEffect} from "./hooks.js";
+import {useAwait, useAwaitState, useAwaitReducer, useAwaitWatch, useAwaitWatchEffect} from "./hooks.js";
 
 export {
   Await,
   AwaitState,
+  AwaitReducer,
   AwaitWatch,
   AwaitWatchEffect,
   Action,
@@ -60,6 +61,31 @@ const AwaitState = defineComponent({
     const use = props.useResolve?.(resolveData, setResolve);
     expose({setResolve});
     return () => slots.default?.({...resolveData.value, setResolve, use});
+  }
+});
+
+const AwaitReducer = defineComponent({
+  name: "AwaitReducer",
+  inheritAttrs: false,
+  props: {
+    deps: {type: Array},
+    handle: {required: true, type: Function},
+    reducersDeps: {type: Object},
+    reducers: {type: [Object, Function]},
+    init: {default: undefined},
+    useResolve: {type: Function},
+    delay: {type: Number, default: 300},
+    jumpFirst: {type: Boolean, default: false},
+    onStart: {type: Function},
+    onEnd: {type: Function},
+    onError: {type: Function},
+    onFinal: {type: Function},
+  },
+  setup: (props, {slots, expose}) => {
+    const [resolveData, dispatch, actions] = useAwaitReducer(props);
+    const use = props.useResolve?.(resolveData, dispatch, actions);
+    expose({dispatch, actions});
+    return () => slots.default?.({...resolveData.value, dispatch, actions, use});
   }
 });
 
