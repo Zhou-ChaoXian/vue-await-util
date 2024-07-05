@@ -1,8 +1,14 @@
-# vue-await-util
+## vue-await-util
 
 > 处理组件中的 `promise`
 
-### 目录
+### 📦 install
+
+```shell
+npm install vue-await-util
+```
+
+### ✨ 目录
 
 1. [`useAwait`](#useawait)
 2. [`useAwaitState`](#useawaitstate)
