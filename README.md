@@ -23,7 +23,7 @@ npm install vue-await-util
 11. [`Action`](#action)
 12. [`Host` `Tmpl` `Slotted`](#插槽)
 13. [`Gen` `Yield` `Next`](#链式组件)
-13. [`uniapp 小程序使用`](#小程序)
+14. [`uniapp 小程序使用`](#小程序)
 
 ### useAwait
 
@@ -759,7 +759,7 @@ import {Host, Tmpl, Slotted} from "vue-await-util";
 > `Gen` 生成器  
 > `Yield` 下一步要渲染的元素  
 > `Next` 渲染下一步元素  
-> ***`Gen` 只渲染第一个子元素，第一个元素不能是 `Yield`，其他元素都是 `Next` 组件***
+> ***`Gen` 只渲染第一个子元素，第一个元素不能是 `Yield`，其他元素都是 `Yield` 组件***
 
 ```vue
 
