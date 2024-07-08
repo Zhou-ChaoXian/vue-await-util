@@ -13,6 +13,9 @@ export {
   Host,
   Tmpl,
   Slotted,
+  Gen,
+  Yield,
+  Next,
 };
 
 const Await = defineComponent({
@@ -186,11 +189,66 @@ const Slotted = defineComponent({
   props: {name: {type: String, default: "default"}},
   setup: (props, {expose, attrs, slots}) => {
     expose();
-    const value = inject(HostContext);
+    const value = inject(HostContext, undefined);
     provide(HostContext, value?.parent);
     return () => {
       const slot = value?.tmplSlots[props.name];
       return slot ? slot(attrs) : slots.default?.();
+    };
+  }
+});
+
+const GenContext = Symbol();
+
+const Gen = defineComponent({
+  name: "Gen",
+  inheritAttrs: false,
+  setup: (_, {slots, expose}) => {
+    expose();
+    const value = {};
+    provide(GenContext, value);
+    return () => {
+      const children = slots.default();
+      Object.assign(value, {
+        index: 0,
+        array: children.slice(1).reduce((arr, child) => {
+          if (child.type === Yield) {
+            arr.push(child.children?.default);
+          }
+          return arr;
+        }, []),
+        state: {},
+      });
+      return children[0];
+    };
+  }
+});
+
+const Yield = defineComponent({
+  name: "Yield",
+  inheritAttrs: false,
+  setup: () => () => undefined,
+});
+
+const Next = defineComponent({
+  name: "Next",
+  inheritAttrs: false,
+  setup: (_, {expose, attrs}) => {
+    expose();
+    const value = inject(GenContext, undefined);
+    const newValue = {};
+    provide(GenContext, newValue);
+    return () => {
+      if (value) {
+        const {index, array, state} = value;
+        if (state[index]) {
+          return;
+        }
+        state[index] = true;
+        const slot = array[index];
+        Object.assign(newValue, {index: index + 1, array, state});
+        return slot?.(attrs);
+      }
     };
   }
 });

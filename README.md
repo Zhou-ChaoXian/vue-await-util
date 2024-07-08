@@ -22,6 +22,7 @@ npm install vue-await-util
 10. [`AwaitWatchEffect`](#awaitwatcheffect)
 11. [`Action`](#action)
 12. [`Host` `Tmpl` `Slotted`](#插槽)
+13. [`Gen` `Yield` `Next`](#链式组件)
 13. [`uniapp 小程序使用`](#小程序)
 
 ### useAwait
@@ -685,7 +686,7 @@ function useCalcCountAction({count}) {
 > `Host` 宿主  
 > `Tmpl` 模板  
 > `Slotted` 占位  
-> `Host` 只渲染第一个子元素，其他元素都是 `Tmpl` 组件  
+> ***`Host` 只渲染第一个子元素，第一个元素不能是 `Tmpl`，其他元素都是 `Tmpl` 组件***  
 > `Tmpl` 和 `Slotted` 的 `name` 一一对应，默认是 `default`
 
 **示例**
@@ -749,6 +750,38 @@ import {Host, Tmpl, Slotted} from "vue-await-util";
       <h1>1</h1>
     </Tmpl>
   </Host>
+</template>
+```
+
+### 链式组件
+
+> 组件嵌套层级太深，将其变成类似于 `Promise` 链式调用  
+> `Gen` 生成器  
+> `Yield` 下一步要渲染的元素  
+> `Next` 渲染下一步元素  
+> ***`Gen` 只渲染第一个子元素，第一个元素不能是 `Yield`，其他元素都是 `Next` 组件***
+
+```vue
+
+<script setup>
+import {Gen, Yield, Next} from "vue-await-util";
+
+</script>
+
+<template>
+  <Gen>
+    <div>
+      <h1>hello</h1>
+      <Next></Next>
+    </div>
+    <Yield>
+      <h1>hi</h1>
+      <Next name="james"></Next>
+    </Yield>
+    <Yield #default="{name}">
+      <h1>你好 - {{ name }}</h1>
+    </Yield>
+  </Gen>
 </template>
 ```
 

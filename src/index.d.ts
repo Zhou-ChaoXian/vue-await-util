@@ -192,8 +192,16 @@ export declare const Action: new <A = any, O = any>() => InstanceType<DefineSetu
 
 export declare const Host: new () => InstanceType<DefineSetupFnComponent>;
 
-export type TmplSlot<P> = SlotsType<{ default: (props: P) => VNode | VNode[]; }>;
+export type TmplSlot<P extends Omit<Record<string, any>, "name">> = SlotsType<{ default: (props: P) => VNode | VNode[]; }>;
 
-export declare const Tmpl: new <P extends Record<string, any> = Record<string, any>>() => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, TmplSlot<P>>>;
+export declare const Tmpl: new <P extends Omit<Record<string, any>, "name"> = any>() => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, TmplSlot<P>>>;
 
-export declare const Slotted: new () => InstanceType<DefineSetupFnComponent<{ name?: string; }, {}, SlotsType<{ default?: () => VNode | VNode[]; }>>>;
+export declare const Slotted: new () => InstanceType<DefineSetupFnComponent<{ name?: string; }>>;
+
+export declare const Gen: new () => InstanceType<DefineSetupFnComponent>;
+
+export type YieldSlot<P extends Record<string, any>> = SlotsType<{ default: (props: P) => VNode | VNode[]; }>;
+
+export declare const Yield: new <P extends Record<string, any> = any>() => InstanceType<DefineSetupFnComponent<{}, {}, YieldSlot<P>>>;
+
+export declare const Next: new () => InstanceType<DefineSetupFnComponent>;
