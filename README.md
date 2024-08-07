@@ -788,7 +788,7 @@ import {Gen, Yield, Next} from "vue-await-util";
 ### 小程序
 
 > ***直接导入的组件，小程序不能使用***  
-> 小程序只能使用 `hook`，组件在 `vue-await-util/dist/components` 目录下
+> 小程序只能使用 `hook`，可用的组件在 `vue-await-util/dist/components` 目录下
 
 ```vue
 

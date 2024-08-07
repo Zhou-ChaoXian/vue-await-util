@@ -126,7 +126,7 @@ function useAwait(
 
 function useAwaitState(
   {
-    deps,
+    deps = [],
     handle,
     init,
     delay = 300,
@@ -138,9 +138,9 @@ function useAwaitState(
   }
 ) {
   let watchDeps = [];
-  if (deps && deps.length > 0) {
-    watch([() => null, ...deps], (value) => {
-      watchDeps = value.slice(1);
+  if (deps.length > 0) {
+    watch(deps, (value) => {
+      watchDeps = value;
     }, {immediate: true});
   }
   const resolve = jumpFirst ? null : handle(watchDeps);
@@ -159,7 +159,7 @@ function useAwaitState(
 
 function useAwaitReducer(
   {
-    deps,
+    deps = [],
     handle,
     reducersDeps,
     reducers: reducersOrFunction,
@@ -177,9 +177,11 @@ function useAwaitReducer(
   if (reducersDeps) {
     Object.entries(reducersDeps).forEach(([key, deps]) => {
       if (deps.length > 0) {
-        watch([() => null, ...deps], (value) => {
-          watchReducersDeps[key] = value.slice(1);
+        watch(deps, (value) => {
+          watchReducersDeps[key] = value;
         }, {immediate: true});
+      } else {
+        watchReducersDeps[key] = [];
       }
     });
   }

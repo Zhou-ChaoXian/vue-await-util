@@ -84,11 +84,11 @@ export interface ActionType<T extends string = string, P = any> {
   payload?: P;
 }
 
-export type Reducer<R = any, T extends string = string, P = any, D = any> = (action: ActionType<T, P> & { deps: D; }) => R | Promise<R>;
+export type Reducer<R = any, T extends string = string, P = any, D = any[] | undefined> = (action: ActionType<T, P> & { deps: D; }) => R | Promise<R>;
 
 export type Reducers = Record<string, Reducer> | (() => Record<string, Reducer>);
 
-export interface AwaitReducerOptions<T, Rs extends Reducers = Reducers, Deps = any, RsDeps extends Record<string, any> = Record<string, any>, Arg = any, E = any> {
+export interface AwaitReducerOptions<T, Rs extends Reducers = Reducers, Deps = any, RsDeps extends Record<string, WatchSource[]> = Record<string, WatchSource[]>, Arg = any, E = any> {
   deps?: Deps;
   handle: (deps: Deps, arg?: Arg) => Promise<T>;
   reducersDeps?: RsDeps;
